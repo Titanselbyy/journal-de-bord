@@ -175,19 +175,17 @@ app.delete("/api/sources/:id", (req, res) => {
   res.json({ ok: true });
 });
 
-/* ---------------- widget + démonstration ---------------- */
-app.use("/veille", express.static(path.join(__dirname, "public"), {
+/* ---------------- pages et widget ----------------
+   Un seul dossier public, servi à la racine. public/index.html — le journal
+   fusionné avec la veille — est donc la page d'accueil, sans route à écrire.
+   Les routes d'API sont déclarées plus haut : aucun fichier ne peut les masquer. */
+app.get("/journal", (req, res) => res.redirect(301, "/"));
+app.use(express.static(path.join(__dirname, "public"), {
   maxAge: "5m", setHeaders: (res) => res.set("Access-Control-Allow-Origin", "*")
 }));
-/* Le journal, servi par le même service. Sans cela le widget ne pourrait pas
-   l'ouvrir : un navigateur refuse qu'une page HTTP ouvre un fichier local. */
-app.get("/journal", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "journal-de-bord.html"), (err) => {
-    if(err) res.status(404).send("journal-de-bord.html introuvable à côté du dossier veille/");
-  });
-});
-app.get("/", (req, res) => res.redirect("/veille/demo.html"));
-
+/* Le journal fusionné avec la veille EST l'index du site : public/index.html.
+   express.static le sert à la racine sans qu'on ait à l'écrire. /journal reste
+   valable, c'est l'adresse qu'ont retenue les premiers liens. */
 app.use((err, req, res, next) => {
   console.error("[veille]", err);
   res.status(500).json({ error: "erreur interne" });
@@ -217,7 +215,7 @@ function schedule(){
 
 const server = app.listen(PORT, () => {
   console.log("[veille] service prêt sur http://localhost:" + PORT);
-  console.log("[veille] démonstration : http://localhost:" + PORT + "/veille/demo.html");
+  console.log("[veille] démonstration : http://localhost:" + PORT + "/demo.html");
   console.log("[veille] " + D.sources.active().length + " sources actives, collecte toutes les "
               + EVERY_MIN + " min");
   // Première passe peu après le démarrage, pour ne pas retarder l'écoute du port.
@@ -235,7 +233,7 @@ server.on("error", (err) => {
   if(err.code === "EADDRINUSE"){
     console.error("\n[veille] Le port " + PORT + " est déjà pris.");
     console.error("[veille] Le service tourne sans doute déjà : ouvrez");
-    console.error("[veille]   http://localhost:" + PORT + "/veille/demo.html");
+    console.error("[veille]   http://localhost:" + PORT + "/demo.html");
     console.error("[veille] Pour en démarrer un second ailleurs :  PORT=4311 npm start");
     console.error("[veille] Pour arrêter celui qui tourne :");
     console.error("[veille]   Windows  netstat -ano | findstr :" + PORT + "   puis  taskkill /PID <pid> /F");

@@ -1,27 +1,63 @@
-# Journal de bord — veille SI
+# Journal de bord — veille Systèmes d'information
 
-Deux morceaux qui se répondent :
+Un arbre de l'année où l'on range ce qu'on lit, et une veille qui va chercher
+l'actualité SI toute seule. Les deux sur la même page.
 
-| | |
-|---|---|
-| `journal-de-bord.html` | le journal : un arbre de l'année (tronc → trimestres → mois → catégories → actualités), la fenêtre d'écriture, les photos |
-| `veille/` | le service de veille : collecte RSS planifiée, sélection du majeur, API et cloche de notification |
+```
+tronc                Les systèmes d'infos
+ └─ 4 branches       les trimestres
+     └─ 3 rameaux    les mois
+         └─ fruits   les catégories (sécurité, données, réglementation…)
+             └─ pépins   les actualités
+```
 
-## En local
+## Démarrer
 
 ```bash
-cd veille
+cd serveur
 npm install
 npm start
 ```
 
-→ le journal : http://localhost:4310/journal
-→ la démonstration de la cloche : http://localhost:4310/veille/demo.html
+→ **http://localhost:4310**
 
-Le service sert les deux : une seule application, une seule origine.
+## Le dossier
 
-## En ligne
+```
+.
+├── README.md                  ce fichier
+├── render.yaml                déploiement (Render lit ce fichier)
+├── .github/workflows/         maintien en éveil + collecte planifiée
+└── serveur/                   toute l'application
+    ├── server.js              API, planificateur, service des pages
+    ├── README.md              documentation technique détaillée
+    ├── .env.example           les réglages, commentés
+    ├── lib/
+    │   ├── db.js              base SQLite : schéma et requêtes
+    │   ├── feed.js            lecture RSS / Atom / RDF, encodages
+    │   ├── collector.js       interrogation des flux, dédoublonnage
+    │   ├── rank.js            sélection du majeur, fiabilité, quota de langue
+    │   └── sources.js         les 18 flux, avec leur niveau de confiance
+    ├── public/
+    │   ├── index.html          le site : l'arbre, l'écriture, la veille
+    │   ├── widget.js          la cloche, embarquable sur n'importe quel site
+    │   └── demo.html          exemple d'intégration sur une page tierce
+    ├── scripts/
+    │   ├── collect-once.js    une collecte manuelle, avec le détail
+    │   └── reselect.js        rejoue la sélection sur toute la base
+    └── test/veille.test.js    dix tests : lecture des flux, filtre
+```
 
-`render.yaml` à la racine décrit le déploiement. Voir `veille/README.md`,
-section « Mise en ligne sur Render », pour les trois points qui décident de
-l'offre à choisir (disque, mise en veille, version de Node).
+## Les adresses
+
+| | |
+|---|---|
+| `/` et `/journal` | le site |
+| `/widget.js` | la cloche, à embarquer ailleurs |
+| `/demo.html` | exemple d'intégration |
+| `/api/…` | l'API (voir `serveur/README.md`) |
+
+## Mise en ligne
+
+`render.yaml` décrit tout. Voir `serveur/README.md`, section
+« Mise en ligne sur Render ».

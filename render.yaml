@@ -25,7 +25,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    rootDir: veille
+    rootDir: serveur
     buildCommand: npm ci --omit=dev
     startCommand: npm start
     healthCheckPath: /api/state

@@ -5,7 +5,7 @@
 
    Emploi :
      <div id="veille"></div>
-     <script src="https://votre-service/veille/widget.js" data-api="https://votre-service/api"></script>
+     <script src="https://votre-service/widget.js" data-api="https://votre-service/api"></script>
 */
 (function(){
   var script = document.currentScript;
