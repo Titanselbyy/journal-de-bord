@@ -9,9 +9,9 @@
     "node": ">=22.5"
   },
   "scripts": {
-    "start": "node --disable-warning=ExperimentalWarning server.js",
-    "collect": "node --disable-warning=ExperimentalWarning scripts/collect-once.js",
-    "test": "node --disable-warning=ExperimentalWarning --test test/veille.test.js"
+    "start": "node --experimental-sqlite --disable-warning=ExperimentalWarning server.js",
+    "collect": "node --experimental-sqlite --disable-warning=ExperimentalWarning scripts/collect-once.js",
+    "test": "node --experimental-sqlite --disable-warning=ExperimentalWarning --test test/veille.test.js"
   },
   "dependencies": {
     "express": "^4.22.2"

@@ -3,7 +3,19 @@
    node:sqlite est intégré à Node (>= 22.5), donc aucune dépendance native à
    compiler — l'installation ne peut pas échouer sur une machine sans toolchain. */
 
-const { DatabaseSync } = require("node:sqlite");
+/* node:sqlite est intégré à Node, mais son exposition a changé de version en
+   version : présent dès 22.5 derrière --experimental-sqlite, accessible sans
+   drapeau à partir de 23.4. Si le module manque, un message clair vaut mieux
+   qu'une pile d'appels sur un serveur distant. */
+let DatabaseSync;
+try{
+  ({ DatabaseSync } = require("node:sqlite"));
+}catch(e){
+  console.error("\n[veille] node:sqlite indisponible sur " + process.version + ".");
+  console.error("[veille] Lancez avec  node --experimental-sqlite server.js");
+  console.error("[veille] ou passez à Node 24 (NODE_VERSION=24 sur Render).\n");
+  throw e;
+}
 const path = require("path");
 const fs = require("fs");
 

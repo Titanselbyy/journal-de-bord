@@ -38,7 +38,7 @@ services:
 
     envVars:
       - key: NODE_VERSION
-        value: "22.11.0"          # node:sqlite exige Node >= 22.5
+        value: "24"               # sur Node 22, node:sqlite exige un drapeau : voir package.json
       # - key: VEILLE_DB
       #   value: /var/data/veille.db
       - key: COLLECT_EVERY_MIN
