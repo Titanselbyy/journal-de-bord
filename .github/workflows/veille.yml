@@ -1,0 +1,34 @@
+# Réveille le service et déclenche une collecte.
+#
+# En offre gratuite, Render endort l'instance après quinze minutes sans trafic :
+# le planificateur interne ne tourne plus. Cette tâche prend le relais.
+#
+# À faire une fois, dans le dépôt GitHub :
+#   Settings → Secrets and variables → Actions → New repository secret
+#     VEILLE_URL    https://<votre-service>.onrender.com
+#     VEILLE_TOKEN  (Render → veille-si → Environment → VEILLE_TOKEN)
+
+name: Collecte de veille
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"    # toutes les 30 minutes (UTC)
+  workflow_dispatch:           # et à la demande, depuis l'onglet Actions
+
+jobs:
+  collecte:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Réveiller le service
+        run: |
+          # Le réveil peut prendre une minute : on patiente plutôt que d'échouer.
+          curl -s -m 90 --retry 3 --retry-delay 20 --retry-all-errors \
+               -o /dev/null -w "réveil : %{http_code}\n" \
+               "${{ secrets.VEILLE_URL }}/api/state"
+
+      - name: Déclencher la collecte
+        run: |
+          curl -s -m 120 -X POST \
+               -H "X-Veille-Token: ${{ secrets.VEILLE_TOKEN }}" \
+               -w "\ncollecte : %{http_code}\n" \
+               "${{ secrets.VEILLE_URL }}/api/refresh"

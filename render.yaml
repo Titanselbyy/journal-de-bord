@@ -1,21 +1,29 @@
 # Déploiement Render — https://render.com
 #
 # Le service sert TOUT : l'API de veille, la cloche, et le journal de bord
-# (route /journal). Une seule application à déployer, une seule origine, donc
-# aucun réglage de CORS à faire.
+# (route /journal). Une seule application, une seule origine, aucun CORS.
 #
-# ATTENTION au stockage : SQLite écrit dans un fichier. Sans disque persistant,
-# Render repart d'un système de fichiers vide à chaque déploiement et à chaque
-# redémarrage — les articles seraient recollectés (sans gravité) mais les
-# statuts « traité » seraient perdus (gênant). Le bloc `disk` ci-dessous règle
-# la question ; il suppose une offre payante. En offre gratuite, retirez-le et
-# acceptez la remise à zéro.
+# ---- OFFRE GRATUITE (réglage actuel) ----
+# Pas de disque : Render n'en propose qu'aux offres payantes. La base SQLite vit
+# donc dans un système de fichiers éphémère et repart à zéro à chaque
+# redémarrage. Conséquences, en clair :
+#   · les articles sont recollectés en une passe (~30 s), rien n'est perdu ;
+#   · les statuts « traité » le sont : la cloche réaffiche ses dix actualités.
+# L'instance s'endort aussi après 15 min sans trafic — le planificateur interne
+# s'arrête donc. Voir .github/workflows/veille.yml : une tâche planifiée GitHub
+# la réveille et déclenche la collecte.
+#
+# ---- POUR PASSER EN PAYANT PLUS TARD ----
+# 1. plan: starter
+# 2. décommenter le bloc disk
+# 3. décommenter VEILLE_DB
+# Les statuts « traité » survivront alors aux déploiements.
 
 services:
   - type: web
     name: veille-si
     runtime: node
-    plan: starter                 # « free » possible, voir les limites plus bas
+    plan: free
     region: frankfurt
     rootDir: veille
     buildCommand: npm ci --omit=dev
@@ -23,16 +31,16 @@ services:
     healthCheckPath: /api/state
     autoDeploy: true
 
-    disk:
-      name: veille-data
-      mountPath: /var/data
-      sizeGB: 1
+    # disk:
+    #   name: veille-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
 
     envVars:
       - key: NODE_VERSION
         value: "22.11.0"          # node:sqlite exige Node >= 22.5
-      - key: VEILLE_DB
-        value: /var/data/veille.db
+      # - key: VEILLE_DB
+      #   value: /var/data/veille.db
       - key: COLLECT_EVERY_MIN
         value: "30"
       - key: MAX_NOTIFS
@@ -40,8 +48,6 @@ services:
       - key: REFRESH_COOLDOWN_S
         value: "20"
       - key: VEILLE_TOKEN
-        generateValue: true       # pour déclencher une collecte depuis l'extérieur
-      # ALLOWED_ORIGINS n'est utile que si la cloche est embarquée sur un AUTRE
-      # domaine que ce service. Depuis /journal, tout est en même origine.
+        generateValue: true       # pour déclencher la collecte de l'extérieur
       - key: ALLOWED_ORIGINS
         value: ""
