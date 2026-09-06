@@ -1,0 +1,47 @@
+# Déploiement Render — https://render.com
+#
+# Le service sert TOUT : l'API de veille, la cloche, et le journal de bord
+# (route /journal). Une seule application à déployer, une seule origine, donc
+# aucun réglage de CORS à faire.
+#
+# ATTENTION au stockage : SQLite écrit dans un fichier. Sans disque persistant,
+# Render repart d'un système de fichiers vide à chaque déploiement et à chaque
+# redémarrage — les articles seraient recollectés (sans gravité) mais les
+# statuts « traité » seraient perdus (gênant). Le bloc `disk` ci-dessous règle
+# la question ; il suppose une offre payante. En offre gratuite, retirez-le et
+# acceptez la remise à zéro.
+
+services:
+  - type: web
+    name: veille-si
+    runtime: node
+    plan: starter                 # « free » possible, voir les limites plus bas
+    region: frankfurt
+    rootDir: veille
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/state
+    autoDeploy: true
+
+    disk:
+      name: veille-data
+      mountPath: /var/data
+      sizeGB: 1
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22.11.0"          # node:sqlite exige Node >= 22.5
+      - key: VEILLE_DB
+        value: /var/data/veille.db
+      - key: COLLECT_EVERY_MIN
+        value: "30"
+      - key: MAX_NOTIFS
+        value: "10"
+      - key: REFRESH_COOLDOWN_S
+        value: "20"
+      - key: VEILLE_TOKEN
+        generateValue: true       # pour déclencher une collecte depuis l'extérieur
+      # ALLOWED_ORIGINS n'est utile que si la cloche est embarquée sur un AUTRE
+      # domaine que ce service. Depuis /journal, tout est en même origine.
+      - key: ALLOWED_ORIGINS
+        value: ""

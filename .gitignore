@@ -1,0 +1,15 @@
+# dépendances : Render les réinstalle à chaque déploiement
+node_modules/
+
+# la base : elle se reconstruit toute seule, et sur Render elle vit sur le disque
+*.db
+*.db-shm
+*.db-wal
+
+# secrets locaux
+.env
+
+# scories système
+.DS_Store
+Thumbs.db
+desktop.ini

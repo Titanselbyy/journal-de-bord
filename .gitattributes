@@ -1,0 +1,13 @@
+# Fins de ligne : le dépôt stocke du LF, point.
+# Sans cette règle, Git avertit à chaque ajout sous Windows — et surtout, une
+# machine mal réglée pourrait un jour committer du CRLF. Sur un serveur Linux,
+# un script à fins de ligne Windows échoue avec « bad interpreter ».
+* text=auto eol=lf
+
+# Fichiers binaires : ne jamais y toucher
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.db  binary

@@ -1,0 +1,1661 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Journal de bord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;1,6..72,200;1,6..72,300&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#121821;
+    --ink2:#1b2431;
+    --web:rgba(130,165,205,.17);
+    --web2:rgba(130,165,205,.34);
+    --star:#e7eff9;
+    --mute:#93a3b8;
+    --faint:#65748a;
+    --rose:#e08a72;
+    --display:"Syne","Helvetica Neue",Helvetica,sans-serif;
+    --prose:"Newsreader",Georgia,"Times New Roman",serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--ink);overflow-x:hidden}
+  body{
+    min-height:100vh;color:var(--star);font-family:var(--prose);font-weight:300;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(130% 90% at 50% 24%,#26313f 0%,#1a222d 46%,var(--ink) 100%);
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer;background:none;border:none;padding:0}
+  :focus-visible{outline:1px solid var(--web2);outline-offset:5px}
+  .shell{max-width:1200px;margin:0 auto;padding:0 18px 44px}
+
+  /* ---------- bandeau ---------- */
+  /* Le bandeau suit l'arbre : pleine largeur, calé dans les coins. Enfermé dans
+     la colonne de texte, il flottait au milieu d'un écran occupé de bord à bord. */
+  .masthead{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    width:100vw;margin-left:calc(50% - 50vw);padding:13px 26px;
+    border-bottom:1px solid var(--web);background:rgba(18,24,33,.55)}
+  .wordmark{font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--star);text-indent:.34em}
+  .yearnav{display:flex;align-items:center;gap:18px}
+  .yearnav #veille{display:inline-flex;margin-left:4px}
+  .yearnav button{font-family:var(--display);font-weight:500;font-size:11px;letter-spacing:.18em;
+    color:var(--faint);transition:color .2s}
+  .yearnav button:hover{color:var(--star)}
+
+  /* ---------- carte ---------- */
+  /* l'arbre occupe l'écran : le cadre étroit bridait la lecture */
+  .plate{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+    height:calc(100vh - 58px);height:calc(100dvh - 58px);
+    overflow:hidden;border-bottom:1px solid rgba(130,165,205,.18);
+    background:radial-gradient(120% 100% at 50% 78%,#3a4a64 0%,#253143 44%,#151c26 100%);
+    box-shadow:inset 0 -90px 140px rgba(0,0,0,.5)}
+  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+  canvas:focus{outline:none}
+  canvas:focus-visible{outline:1px solid var(--web);outline-offset:0}
+
+  /* la fiche d'un mois : elle s'accroche à son nœud */
+  .detail{position:absolute;z-index:3;width:296px;max-width:calc(100% - 28px);
+    font-family:var(--display);background:rgba(24,32,44,.94);
+    border:1px solid rgba(130,165,205,.28);border-radius:10px;padding:13px 14px 12px;
+    box-shadow:0 18px 46px rgba(0,0,0,.55)}
+  .detail header{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px}
+  .detail h4{margin:0;flex:1;font-weight:700;font-size:11px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--star);line-height:1.45}
+  .detail h4 span{color:var(--mute);font-weight:500}
+  .detail header button{font-size:18px;line-height:.7;color:var(--faint);padding:0 2px}
+  .detail header button:hover{color:var(--star)}
+  .detail ol{list-style:none;margin:0;padding:0}
+  .detail li{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13px;
+    line-height:1.35;color:#cddaea;cursor:pointer;
+    border-top:1px solid rgba(130,165,205,.12)}
+  .detail li:first-child{border-top:none}
+  .detail li:hover{color:#fff}
+  .detail li b{font-weight:600;font-size:11px;color:var(--faint)}
+  .detail li img{width:30px;height:30px;object-fit:cover;border-radius:4px;
+    border:1px solid rgba(130,165,205,.25)}
+  .detail li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .detail li.none{color:var(--faint);font-style:italic;cursor:default}
+  .dact{display:flex;gap:8px;margin-top:11px}
+  .dact button{flex:1;font-family:var(--display);font-weight:600;font-size:9.5px;
+    letter-spacing:.13em;text-transform:uppercase;padding:9px 6px;border-radius:6px;
+    border:1px solid rgba(130,165,205,.28);color:var(--mute);transition:.2s}
+  .dact button:hover{color:#fff;border-color:rgba(130,165,205,.6);
+    background:rgba(130,165,205,.12)}
+
+  /* les chevrons de mois : discrets, aux deux bords de la carte */
+  .step{position:absolute;top:50%;transform:translateY(-50%);z-index:2;
+    width:46px;height:76px;display:flex;align-items:center;justify-content:center;
+    color:var(--faint);opacity:.55;transition:opacity .22s,color .22s}
+  .step:hover{color:var(--star);opacity:1}
+  .step i{display:block;width:12px;height:12px;
+    border-left:1px solid currentColor;border-bottom:1px solid currentColor}
+  .step.prev{left:2px}
+  .step.next{right:2px}
+  .step.prev i{transform:rotate(45deg);margin-left:5px}
+  .step.next i{transform:rotate(-135deg);margin-right:5px}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .sr-only:focus-within{position:static;width:auto;height:auto;clip:auto;margin:8px 0;
+    display:flex;flex-wrap:wrap;gap:7px}
+  .sr-only button{border:1px solid var(--web);color:var(--mute);font-family:var(--display);
+    font-size:10px;letter-spacing:.16em;padding:6px 10px}
+
+  /* ---------- lecture ---------- */
+  .readout{min-height:210px;max-width:860px;margin:0 auto;
+    border-top:1px solid var(--web);padding-top:14px}
+  .footline{max-width:860px;margin-left:auto;margin-right:auto}
+  .idle{color:var(--faint);font-family:var(--display);font-size:10px;letter-spacing:.3em;
+    text-transform:uppercase;padding:34px 0;text-align:center}
+  .rhead{display:flex;align-items:flex-end;gap:16px;margin-bottom:6px}
+  .rtitle{flex:1;min-width:0}
+  .rmonth{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.11em;
+    text-transform:uppercase;line-height:1.1}
+  .rsub{font-family:var(--prose);font-style:italic;font-size:14px;color:var(--mute);margin-top:3px}
+  .act{font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--mute);padding:6px 0;white-space:nowrap;
+    border-bottom:1px solid transparent;transition:.2s}
+  .act:hover{color:var(--star);border-bottom-color:var(--star)}
+  .act.lead{color:var(--star);border-bottom-color:var(--web2)}
+
+  .rnav{display:flex;gap:22px;align-items:center;justify-content:space-between;
+    padding:9px 0 0;margin-top:8px;border-top:1px solid rgba(150,160,205,.08)}
+  .rlist{list-style:none;margin:8px 0 0;padding:0}
+  .rlist li{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:baseline;
+    padding:10px 0;border-top:1px solid rgba(150,160,205,.08);cursor:pointer}
+  .rlist li:first-child{border-top:none}
+  .rlist .day{font-family:var(--display);font-weight:500;font-size:10.5px;letter-spacing:.1em;
+    color:var(--faint);text-transform:uppercase;transition:color .18s}
+  .rlist .ttl{font-size:17px;line-height:1.4;color:#CFC9BE;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;transition:color .18s}
+  .rlist li:hover .ttl{color:var(--star)}
+  .rlist li:hover .day{color:var(--mute)}
+  .rmore{font-family:var(--display);font-size:10px;letter-spacing:.2em;color:var(--faint);
+    text-transform:uppercase;padding-top:12px}
+  .rnone{font-style:italic;font-size:16px;color:var(--mute);padding:18px 0}
+
+  .peek{padding:14px 0 2px;cursor:pointer}
+  .peek .stamp{font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--faint)}
+  .peek h3{margin:7px 0 7px;font-weight:400;font-size:22px;line-height:1.25;color:var(--star)}
+  .peek p{margin:0;font-size:16px;line-height:1.65;color:#BFB9AE;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .tags{margin-top:11px;display:flex;flex-wrap:wrap;gap:9px}
+  .tag{font-family:var(--display);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--mute);border-bottom:1px solid var(--web)}
+  .tag.mood{color:var(--star);border-bottom-color:var(--web2)}
+  .fade{animation:fu .3s ease-out both}
+  @keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.fade{animation:none}}
+
+  .footline{display:flex;justify-content:space-between;align-items:center;
+    margin-top:22px;padding-top:14px;border-top:1px solid var(--web)}
+  .note{font-family:var(--display);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--faint)}
+  .note.warn{color:var(--rose);letter-spacing:.1em;text-transform:none;font-size:12px;
+    font-family:var(--prose);font-style:italic}
+
+  /* ---------- panneau ---------- */
+  .veil{position:fixed;inset:0;z-index:4;background:rgba(3,4,9,.78);opacity:0;
+    pointer-events:none;transition:opacity .26s}
+  .veil.on{opacity:1;pointer-events:auto}
+  /* la fenêtre d'écriture : au milieu de l'écran, posée sur la carte */
+  .panel{position:fixed;z-index:5;display:flex;flex-direction:column;
+    left:50%;top:50%;width:min(560px,calc(100vw - 32px));max-height:min(86vh,780px);
+    background:var(--ink2);border:1px solid var(--web2);
+    box-shadow:0 30px 90px rgba(2,3,8,.72);
+    opacity:0;pointer-events:none;transform:translate(-50%,-48%) scale(.985);
+    transition:opacity .22s,transform .3s cubic-bezier(.2,.75,.25,1)}
+  .panel.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  @media (prefers-reduced-motion:reduce){.panel{transition:none}}
+  .phead{display:flex;align-items:flex-start;gap:16px;padding:26px 26px 18px}
+  .phead .stamp{flex:1;font-family:var(--display);font-weight:500;font-size:10.5px;
+    letter-spacing:.26em;text-transform:uppercase;color:var(--mute);padding-top:4px}
+  .shut{font-size:22px;line-height:.8;color:var(--faint);padding:2px 4px;transition:color .2s}
+  .shut:hover{color:var(--star)}
+  .pbody{flex:1;overflow-y:auto;padding:0 26px 30px;-webkit-overflow-scrolling:touch}
+  .pfoot{padding:16px 26px calc(18px + env(safe-area-inset-bottom));border-top:1px solid var(--web)}
+
+  .solid{width:100%;background:var(--star);color:#0A0C15;font-family:var(--display);
+    font-weight:600;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+    padding:15px;transition:opacity .2s}
+  .solid:hover{opacity:.86}
+  .solid[disabled]{opacity:.45;cursor:default}
+  .hollow{border:1px solid var(--web);color:var(--mute);font-family:var(--display);
+    font-weight:500;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+    padding:15px 22px;transition:.2s}
+  .hollow:hover{color:var(--star);border-color:var(--web2)}
+  .pair{display:flex;gap:12px}
+  .pair .solid{flex:1}
+
+  .read h3{margin:0 0 12px;font-weight:400;font-size:27px;line-height:1.22;color:var(--star)}
+  .read p{margin:0;font-size:17px;line-height:1.78;color:#C4BEB3;white-space:pre-wrap}
+  .read .src{margin-top:18px;font-size:14px}
+  .read .src a{color:var(--mute);text-decoration:none;word-break:break-all;
+    border-bottom:1px solid var(--web);transition:.2s}
+  .read .src a:hover{color:var(--star);border-bottom-color:var(--star)}
+  .read img{margin-top:18px;max-width:100%;display:block;cursor:zoom-in;border:1px solid var(--web)}
+  .kill{margin-top:26px;font-family:var(--display);font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--faint);border-bottom:1px solid transparent;padding-bottom:2px}
+  .kill:hover{color:var(--rose);border-bottom-color:var(--rose)}
+  .blank{margin:34px 0;font-style:italic;font-size:17px;line-height:1.7;color:var(--mute)}
+
+  .fld{margin:22px 0}
+  .fld label{display:block;font-family:var(--display);font-weight:500;font-size:9.5px;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+  .fld input[type=text],.fld input[type=date],.fld textarea{
+    width:100%;background:transparent;border:none;border-bottom:1px solid var(--web);
+    color:var(--star);padding:8px 0;border-radius:0;font-family:var(--prose);
+    font-size:17px;font-weight:300;transition:border-color .2s}
+  .fld textarea{line-height:1.75;min-height:170px;resize:vertical}
+  .fld input:focus,.fld textarea:focus{outline:none;border-bottom-color:var(--star)}
+  .fld input::placeholder,.fld textarea::placeholder{color:var(--faint);font-style:italic}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+  /* le choix de catégorie : la pastille prend la couleur du fruit correspondant */
+  .swatch{display:flex;flex-wrap:wrap;gap:8px}
+  .swatch button{font-family:var(--display);font-weight:600;font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding:7px 11px;
+    border:1px solid var(--web);border-radius:6px;transition:.18s}
+  .swatch button:hover{color:var(--star);border-color:var(--web2)}
+  .swatch button[aria-pressed=true]{color:#0d131c;background:var(--h);border-color:var(--h)}
+  @media (max-width:520px){ .duo{grid-template-columns:1fr} }
+  .shots{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .shots img{height:58px;border:1px solid var(--web)}
+  input[type=file]{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:var(--faint);max-width:100%}
+  input[type=file]::file-selector-button{font-family:var(--display);font-weight:500;font-size:9.5px;
+    letter-spacing:.2em;text-transform:uppercase;background:none;border:1px solid var(--web);
+    color:var(--mute);padding:9px 13px;margin-right:14px;cursor:pointer}
+  input[type=date]{color-scheme:dark}
+  .alert{margin:14px 0 0;font-family:var(--prose);font-style:italic;font-size:14px;color:var(--rose)}
+  .alert:empty{display:none}
+
+  .loupe{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;
+    background:rgba(3,4,9,.96);padding:22px}
+  .loupe.on{display:flex}
+  .loupe img{max-width:100%;max-height:100%}
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <span class="wordmark">Journal de bord</span>
+    <nav class="yearnav">
+      <button id="prevY"></button>
+      <button id="nextY"></button>
+      <span id="veille"></span>
+    </nav>
+  </header>
+
+  <div class="plate">
+    <button class="step prev" id="prevM" type="button"><i></i></button>
+    <button class="step next" id="nextM" type="button"><i></i></button>
+    <aside class="detail" id="detail" hidden>
+      <header>
+        <h4 id="detailTitle"></h4>
+        <button id="detailShut" type="button" aria-label="Fermer la fiche">&#215;</button>
+      </header>
+      <ol id="detailList"></ol>
+      <div class="dact">
+        <button id="detailWrite" type="button">Écrire</button>
+        <button id="detailAll" type="button">Voir toutes les entrées</button>
+      </div>
+    </aside>
+    <canvas id="chart" tabindex="0" role="application"
+      aria-label="Carte du mois. Chaque point est une entrée, le cercle marqué d'un plus ouvre l'écriture. Glissez pour déplacer la carte, molette ou pincement pour zoomer. Flèches pour parcourir les entrées, Entrée pour ouvrir, Maj plus flèches pour changer de mois, Échap pour recentrer."></canvas>
+  </div>
+  <nav class="sr-only" id="srnav" aria-label="Mois"></nav>
+
+  <div class="readout" id="readout" aria-live="polite"></div>
+
+  <div class="footline">
+    <span class="note" id="note"></span>
+    <button class="act" id="exportBtn">Exporter</button>
+  </div>
+</div>
+
+<div class="veil" id="veil"></div>
+
+<section class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="pstamp" aria-hidden="true">
+  <header class="phead">
+    <span class="stamp" id="pstamp"></span>
+    <button class="shut" id="shut" aria-label="Fermer">&#215;</button>
+  </header>
+  <div class="pbody" id="pbody"></div>
+  <footer class="pfoot" id="pfoot"></footer>
+</section>
+
+<div class="loupe" id="loupe"><img id="loupeImg" alt=""></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin",
+                "Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  var SHORT  = ["janv","févr","mars","avril","mai","juin",
+                "juil","août","sept","oct","nov","déc"];
+  var LANGS  = ["français","anglais","espagnol","portugais","arabe","allemand",
+                "italien","russe","chinois","japonais"];
+  var PREVIEW = 6, INDEX_LIMIT = 4300000;
+  var motion = !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* ---------------- stockage ---------------- */
+  /* Trois niveaux de conservation, du meilleur au pire :
+       1. window.storage — l'API de la page hôte, quand il y en a une ;
+       2. localStorage   — le navigateur. C'est ce qui fait qu'un journal mis en
+                           ligne (Render, un hébergement statique) retient ce
+                           qu'on y écrit, au lieu de tout perdre au rechargement ;
+       3. la mémoire vive — dernier recours (navigation privée, stockage bloqué).
+     Le troisième cas est le seul qui mérite un avertissement à l'écran.        */
+  var hasStore = (typeof window.storage === "object" && window.storage !== null &&
+                  typeof window.storage.get === "function");
+  var hasLocal = (function(){
+    try{
+      var probe = "jdb:probe";
+      window.localStorage.setItem(probe, "1");
+      window.localStorage.removeItem(probe);
+      return true;
+    }catch(e){ return false; }
+  })();
+  var mem = {};
+  var store = {
+    get: function(k){
+      if(hasStore)
+        return window.storage.get(k,false).then(function(r){ return r ? r.value : null; })
+               .catch(function(){ return null; });
+      if(hasLocal){
+        try{ return Promise.resolve(window.localStorage.getItem(k)); }
+        catch(e){ return Promise.resolve(null); }
+      }
+      return Promise.resolve(Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null);
+    },
+    set: function(k,v){
+      if(hasStore)
+        return window.storage.set(k,v,false).then(function(r){ return !!r; })
+               .catch(function(){ return false; });
+      if(hasLocal){
+        try{ window.localStorage.setItem(k, v); return Promise.resolve(true); }
+        catch(e){ return Promise.resolve(false); }   // quota dépassé : on le dit
+      }
+      mem[k]=v; return Promise.resolve(true);
+    },
+    del: function(k){
+      if(hasStore)
+        return window.storage.delete(k,false).then(function(){ return true; })
+               .catch(function(){ return false; });
+      if(hasLocal){
+        try{ window.localStorage.removeItem(k); }catch(e){}
+        return Promise.resolve(true);
+      }
+      delete mem[k]; return Promise.resolve(true);
+    }
+  };
+  function yearKey(y){ return "jdb:v1:" + y; }
+  function imgKey(id){ return "jdb:img:" + id; }
+
+  /* ---------------- état ---------------- */
+  var today = new Date();
+  // focus : le mois retenu, celui dont la fiche est ouverte (null si aucune).
+  // hover : le mois sous le curseur, pour l'éclairer sans rien engager.
+  /* focus : le mois dont la fiche est ouverte · fruit : la catégorie retenue
+     hover / pip / hoverMonth : ce que le curseur éclaire, sans rien engager. */
+  var state = {
+    year: today.getFullYear(), entries: [],
+    focus: null, fruit: null, hover: null, pip: null, hoverMonth: null,
+    loading: true, pendingPhoto: undefined, editing: null
+  };
+
+  function monthOf(e){ return parseInt(e.date.slice(5,7),10) - 1; }
+  function byMonth(m){
+    return state.entries.filter(function(e){ return monthOf(e) === m; })
+      .sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  }
+  function entryById(id){ return state.entries.filter(function(e){ return e.id === id; })[0] || null; }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function pad(n){ return n < 10 ? "0" + n : String(n); }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function labelOf(e){ return e.title || (e.body || "").split("\n")[0] || "sans titre"; }
+  function dayStamp(e){ return pad(parseInt(e.date.slice(8,10),10)) + " " + SHORT[monthOf(e)]; }
+
+  // À l'ouverture d'une année : le mois courant si c'est l'année courante, sinon
+  // le dernier mois qui a quelque chose à montrer. Jamais une page vide.
+  function firstMonth(){
+    if(state.year === today.getFullYear()) return today.getMonth();
+    for(var i = 11; i >= 0; i--) if(byMonth(i).length) return i;
+    return 0;
+  }
+  function loadYear(){
+    state.loading = true; state.hover = null; state.focus = null;
+    document.getElementById("prevY").textContent = "← " + (state.year - 1);
+    document.getElementById("nextY").textContent = (state.year + 1) + " →";
+    build(); renderReadout(); renderSrNav(); renderArrows();
+    return store.get(yearKey(state.year)).then(function(raw){
+      var data = null;
+      if(raw){ try{ data = JSON.parse(raw); }catch(e){ data = null; } }
+      state.entries = (data && Array.isArray(data.entries)) ? data.entries : [];
+      state.loading = false;
+      build();
+      selectMonth(firstMonth());
+      renderSrNav();
+    });
+  }
+  function saveYear(){
+    var payload = JSON.stringify({ v:1, year:state.year, entries:state.entries });
+    if(payload.length > INDEX_LIMIT){
+      return Promise.resolve({ ok:false,
+        msg:"Cette année a atteint sa limite. Exportez-la, puis retirez quelques entrées avec photo." });
+    }
+    return store.set(yearKey(state.year), payload).then(function(ok){
+      return ok ? {ok:true} : {ok:false, msg:"Rien n'a été enregistré. Réessayez."};
+    });
+  }
+
+  /* ================= la carte ================= */
+  var cv = document.getElementById("chart"), ctx = cv.getContext("2d");
+  var W = 0, H = 0, S = 1, dpr = 1;
+  var GOLD = 2.399963;
+
+  /* --------- l'arbre ---------
+     Cinq étages, du sol à la cueillette :
+       le TRONC    porte le sujet — les systèmes d'information ;
+       4 BRANCHES  les trimestres ;
+       12 RAMEAUX  les mois, trois par trimestre ;
+       les FRUITS  les catégories du SI présentes ce mois-là ;
+       les PÉPINS  les actualités elles-mêmes, à l'intérieur du fruit.
+     On ne montre pas tout à la fois : les fruits n'apparaissent qu'en approchant,
+     les pépins qu'en s'approchant encore. Un arbre vu de loin, c'est une
+     silhouette ; de près seulement, on distingue ce qu'il porte.               */
+
+  var CATS = [
+    { id:"securite",   name:"Sécurité",      hue:"#e5695f", soft:"#ffb3ab" },
+    { id:"infra",      name:"Infrastructure", hue:"#56b7e8", soft:"#a8e0fa" },
+    { id:"donnees",    name:"Données",       hue:"#c58ae8", soft:"#e2c4f5" },
+    { id:"innovation", name:"Innovation",    hue:"#5fd07f", soft:"#aeeec0" },
+    { id:"reglement",  name:"Réglementation", hue:"#f2c245", soft:"#ffe6a0" },
+    { id:"metier",     name:"Métier",        hue:"#f2825a", soft:"#ffc0a4" }
+  ];
+  var CAT_BY_ID = {};
+  CATS.forEach(function(c){ CAT_BY_ID[c.id] = c; });
+
+  /* Une entrée sans catégorie choisie est rangée d'après ses mots : les anciennes
+     entrées ne se retrouvent pas toutes dans un fourre-tout. */
+  var CAT_RULES = [
+    ["securite",   /s[ée]curit|faille|vuln[ée]rab|ransomware|cyber|piratage|attaque|CERT|CVE|phishing|fuite/i],
+    ["reglement",  /RGPD|GDPR|NIS ?2|DORA|AI Act|loi|d[ée]cret|directive|CNIL|amende|sanction|conformit|juridique/i],
+    ["donnees",    /donn[ée]es|data|base de donn|entrep[ôo]t|ETL|BI\b|analytics|d[ée]cisionnel/i],
+    ["infra",      /infrastructure|cloud|serveur|r[ée]seau|datacenter|kubernetes|virtualis|h[ée]bergement|sauvegarde|SaaS/i],
+    ["innovation", /\bIA\b|\bAI\b|intelligence artificielle|innovation|LLM|machine learning|quantique|blockchain|recherche/i],
+    ["metier",     /DSI|ERP|SIRH|CRM|m[ée]tier|organisation|projet|gouvernance|budget|march[ée]|contrat|prestataire/i]
+  ];
+  function catOf(e){
+    if(e.cat && CAT_BY_ID[e.cat]) return e.cat;
+    var text = (e.title || "") + " " + (e.body || "") + " " + (e.tags || []).join(" ");
+    for(var i = 0; i < CAT_RULES.length; i++)
+      if(CAT_RULES[i][1].test(text)) return CAT_RULES[i][0];
+    return "metier";
+  }
+
+  var TRUNK = { x:800, y:975, top:700 };
+  var QUARTERS = [
+    { d:[-0.95, -0.31], len:335, hue:"#56b7e8", soft:"#a8e0fa", tag:"T1 · JANV — MARS" },
+    { d:[-0.33, -0.945], len:360, hue:"#5fd07f", soft:"#aeeec0", tag:"T2 · AVRIL — JUIN" },
+    { d:[ 0.33, -0.945], len:360, hue:"#f2c245", soft:"#ffe6a0", tag:"T3 · JUIL — SEPT" },
+    { d:[ 0.95, -0.31], len:335, hue:"#f2825a", soft:"#ffc0a4", tag:"T4 · OCT — DÉC" }
+  ];
+  var SPREAD = 0.66;        // ouverture des trois rameaux autour de leur branche
+  var LIMB = 245;           // longueur d'un rameau de mois
+  var FRUIT_R = 74;         // rayon de la couronne de fruits au bout du rameau
+  var K_FRUIT = 1.35;       // zoom à partir duquel les fruits se nomment
+  var K_PIP = 2.30;         // zoom à partir duquel les pépins apparaissent
+
+  var months = [], dust = [];
+
+  /* Les branches ne jaillissent pas toutes du même point : elles quittent le
+     tronc à des hauteurs différentes, les basses d'abord, les hautes ensuite.
+     Sans cet étagement, quatre bases de trente unités se superposent au sommet
+     et forment un pâté — c'est ce qui faisait feu d'artifice plutôt qu'arbre. */
+  var FORK = [0.46, 0.86, 0.70, 0.30];      // hauteur de départ, par trimestre
+  function trunkAt(t){
+    // le tronc s'infléchit doucement : une verticale parfaite fait poteau
+    return { x: TRUNK.x + Math.sin(t * 1.7) * 16,
+             y: TRUNK.y + (TRUNK.top - TRUNK.y) * t };
+  }
+  function quarterFoot(q){ return trunkAt(FORK[q]); }
+  function quarterTip(q){
+    var Q = QUARTERS[q], f0 = quarterFoot(q);
+    return { x: f0.x + Q.d[0] * Q.len, y: f0.y + Q.d[1] * Q.len };
+  }
+  function quarterCtrl(q){
+    var Q = QUARTERS[q], t = quarterTip(q), f0 = quarterFoot(q);
+    // elle part d'abord dans l'axe du tronc, puis s'ouvre : c'est le geste d'une
+    // branche qui se détache, pas d'un rayon qui part du centre
+    return [{ x:f0.x + Q.d[0] * 30, y:f0.y - 120 },
+            { x:t.x - Q.d[0] * 120, y:t.y - Q.d[1] * 120 }];
+  }
+  function bez3(p0, c1, c2, p3, t){
+    var u = 1 - t;
+    return {
+      x: u*u*u*p0.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*p3.x,
+      y: u*u*u*p0.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*p3.y
+    };
+  }
+  function quarterAt(q, t){
+    var c = quarterCtrl(q);
+    return bez3(quarterFoot(q), c[0], c[1], quarterTip(q), t);
+  }
+  function quarterAngle(q, t){
+    var a = quarterAt(q, Math.max(0, t - 0.04)), b = quarterAt(q, Math.min(1, t + 0.04));
+    return Math.atan2(b.y - a.y, b.x - a.x);
+  }
+  /* Un rameau de mois fourche le long de sa branche, pas à son extrémité : le
+     premier mois part bas et loin, le deuxième plus haut de l'autre côté, le
+     troisième prolonge la pointe. C'est la ramification d'un vrai arbre. */
+  var LIMB_T = [0.50, 0.76, 1.0];       // où chaque mois quitte sa branche
+  var LIMB_A = [-0.62, 0.58, 0.06];     // et de quel côté il s'écarte
+  function limbOf(q, k){
+    var t0 = LIMB_T[k];
+    var from = quarterAt(q, t0);
+    var base = quarterAngle(q, t0);
+    // un peu d'irrégularité : trois rameaux rigoureusement identiques font décor
+    var jitter = (rnd(q * 7 + k * 3 + 1) - 0.5) * 0.22;
+    var ang = base + LIMB_A[k] + jitter;
+    var len = LIMB * (1.12 - k * 0.09) * (0.9 + rnd(q * 5 + k) * 0.22);
+    var to = { x: from.x + Math.cos(ang) * len, y: from.y + Math.sin(ang) * len };
+    // la courbure : le rameau sort dans l'axe de la branche avant de s'ouvrir
+    var ctrl = { x: from.x + Math.cos((base + ang) / 2) * len * 0.5,
+                 y: from.y + Math.sin((base + ang) / 2) * len * 0.5 };
+    return { from: from, ctrl: ctrl, to: to, ang: ang };
+  }
+  function limbAt(l, t){
+    var u = 1 - t;
+    return { x: u*u*l.from.x + 2*u*t*l.ctrl.x + t*t*l.to.x,
+             y: u*u*l.from.y + 2*u*t*l.ctrl.y + t*t*l.to.y };
+  }
+
+  var cam = { x:800, y:578, k:1.0, tx:800, ty:578, tk:1.0 };
+  var KMIN = 0.72, KMAX = 4.2, GLIDE = 0.09, ZOOMV = 0.08;
+  var lastPt = null, grab = null, pinch = null, pointers = {}, dragged = false;
+
+  function rnd(seed){ var x = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  function wpx(v){ return v * S * cam.k; }
+  function dpx(v){ return v * S * 1.35 * Math.pow(cam.k, 0.5); }
+  function X(x){ return (x - cam.x) * S * cam.k + W / 2; }
+  function Y(y){ return (y - cam.y) * S * cam.k + H / 2; }
+  function BX(x){ return (x - cam.x) * S * cam.k * 0.45 + W / 2; }
+  function BY(y){ return (y - cam.y) * S * cam.k * 0.45 + H / 2; }
+
+  for(var d = 0; d < 110; d++){
+    dust.push({ x: 800 + (rnd(d * 3 + 1) - 0.5) * 2600, y: 560 + (rnd(d * 7 + 2) - 0.5) * 2000,
+                a: 0.05 + rnd(d * 11 + 5) * 0.14, r: 0.5 + rnd(d * 13) * 1.2 });
+  }
+
+  /* Construction de l'arbre entier : mois → fruits (catégories présentes) →
+     pépins (les entrées). Un mois sans entrée garde son rameau, nu. */
+  function build(){
+    var was = {};
+    months.forEach(function(m){ was[m.i] = m.glow; });
+    months = [];
+    for(var i = 0; i < 12; i++){
+      var q = (i / 3) | 0, k = i % 3;
+      var limb = limbOf(q, k);
+      var list = byMonth(i);
+
+      // regroupement par catégorie, dans l'ordre de CATS pour que la couronne
+      // ne change pas de disposition d'un mois à l'autre
+      var bucket = {};
+      list.forEach(function(e){ (bucket[catOf(e)] = bucket[catOf(e)] || []).push(e); });
+      var present = CATS.filter(function(c){ return bucket[c.id]; });
+
+      var fruits = present.map(function(c, fi){
+        var n = present.length;
+        // couronne ouverte dans l'axe du rameau : les fruits ne reviennent pas
+        // sur la branche dont ils pendent
+        var spread = n === 1 ? 0 : (fi / (n - 1) - 0.5) * Math.min(2.4, 0.7 * n);
+        var ang = limb.ang + spread;
+        var reach = FRUIT_R * (n === 1 ? 0.35 : 1);
+        var entries = bucket[c.id].slice().sort(function(a, b){
+          return a.date < b.date ? 1 : -1;
+        });
+        return {
+          cat: c, month: i, key: i + ":" + c.id,
+          x: limb.to.x + Math.cos(ang) * reach,
+          y: limb.to.y + Math.sin(ang) * reach,
+          r: 13 + Math.min(entries.length, 12) * 1.15,
+          entries: entries, glow: 0,
+          pips: entries.slice(0, 10).map(function(e, pi, arr){
+            var a2 = (pi / Math.max(1, arr.length)) * 6.2832 + i * 0.7;
+            var rr = arr.length === 1 ? 0 : 0.55;
+            return { id: e.id, day: parseInt(e.date.slice(8, 10), 10),
+                     dx: Math.cos(a2) * rr, dy: Math.sin(a2) * rr };
+          })
+        };
+      });
+
+      months.push({ i:i, q:q, k:k, limb:limb, n:list.length, fruits:fruits,
+                    x:limb.to.x, y:limb.to.y, glow: was[i] || 0 });
+    }
+    if(!motion) draw();
+  }
+
+  function allFruits(){
+    var out = [];
+    months.forEach(function(m){ m.fruits.forEach(function(f){ out.push(f); }); });
+    return out;
+  }
+
+  function step(){
+    if(lastPt && !grab && !pinch && !(panel && panel.classList.contains("on")))
+      look(lastPt.x, lastPt.y);
+    cam.x += (cam.tx - cam.x) * GLIDE;
+    cam.y += (cam.ty - cam.y) * GLIDE;
+    cam.k += (cam.tk - cam.k) * ZOOMV;
+    months.forEach(function(m){
+      var want = (state.focus === m.i) ? 1 : (state.hoverMonth === m.i ? 0.55 : 0);
+      m.glow += (want - m.glow) * 0.14;
+      m.fruits.forEach(function(f){
+        var w2 = (state.fruit === f.key) ? 1 : (state.hover === f.key ? 0.6 : 0);
+        f.glow += (w2 - f.glow) * 0.16;
+      });
+    });
+  }
+  function settle(){ for(var n = 0; n < 60; n++) step();
+                     cam.x = cam.tx; cam.y = cam.ty; cam.k = cam.tk; }
+
+  function clampK(k){ return Math.max(KMIN, Math.min(KMAX, k)); }
+  function clampCam(){
+    var lt = Math.max(0, 520 - 430 / cam.tk);
+    cam.tx = Math.max(800 - lt, Math.min(800 + lt, cam.tx));
+    cam.ty = Math.max(560 - lt * 0.75, Math.min(560 + lt * 0.75, cam.ty));
+    var lc = Math.max(0, 520 - 430 / cam.k);
+    cam.x = Math.max(800 - lc, Math.min(800 + lc, cam.x));
+    cam.y = Math.max(560 - lc * 0.75, Math.min(560 + lc * 0.75, cam.y));
+  }
+  function zoomAt(cx, cy, factor){
+    var before = toWorld(cx, cy);
+    if(!before) return;
+    cam.k = cam.tk = clampK(cam.k * factor);
+    var after = toWorld(cx, cy);
+    cam.x = cam.tx = cam.x + (before.x - after.x);
+    cam.y = cam.ty = cam.y + (before.y - after.y);
+    clampCam(); placeCard();
+    if(!motion){ settle(); draw(); }
+  }
+  function recentre(){
+    cam.tx = 800; cam.ty = 578; cam.tk = 1.0;
+    if(!motion){ settle(); draw(); }
+  }
+  /* Aller voir un fruit de près : c'est le geste qui fait passer de la
+     silhouette aux actualités. */
+  function zoomTo(f){
+    cam.tx = f.x; cam.ty = f.y; cam.tk = Math.max(cam.tk, K_PIP + 0.25);
+    clampCam();
+    if(!motion){ settle(); draw(); }
+  }
+
+  function resize(){
+    var r = cv.getBoundingClientRect();
+    if(!r.width) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    S = Math.min(W, H) / 1000;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    placeCard();
+    if(!motion) draw();
+  }
+
+  var thumbs = {};
+  function thumbFor(id){
+    var e = entryById(id);
+    if(!e || !e.thumb) return null;
+    var im = thumbs[id];
+    if(!im){
+      im = thumbs[id] = new Image();
+      im.onload = function(){ if(!motion) draw(); };
+      im.src = e.thumb;
+    }
+    return (im.complete && im.naturalWidth) ? im : null;
+  }
+  function hexa(hex, a){
+    var n = parseInt(hex.slice(1), 16);
+    return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
+  }
+  /* Assombrir une teinte sans virer au gris : on multiplie, on ne mélange pas
+     avec du noir. C'est la différence entre un fruit dans l'ombre et un fruit sale. */
+  function shade(hex, f){
+    var n = parseInt(hex.slice(1), 16);
+    return "rgb(" + Math.round((n >> 16) * f) + "," +
+                    Math.round(((n >> 8) & 255) * f) + "," +
+                    Math.round((n & 255) * f) + ")";
+  }
+  function roundRect(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  /* Opacité progressive : un étage ne surgit pas, il se révèle entre deux zooms. */
+  function fade(k, from, to){
+    return Math.max(0, Math.min(1, (k - from) / (to - from)));
+  }
+
+  function draw(){
+    if(!W) return;
+    ctx.clearRect(0, 0, W, H);
+    // plein écran : le plafond de 19 px rendait les étiquettes minuscules
+    var f = Math.max(11, Math.min(26, W * 0.0135));
+    var i, m, Q, q;
+    var showFruit = fade(cam.k, K_FRUIT - 0.35, K_FRUIT + 0.15);
+    var showPip = fade(cam.k, K_PIP - 0.5, K_PIP + 0.2);
+
+    for(i = 0; i < dust.length; i++){
+      var g = dust[i];
+      ctx.fillStyle = "rgba(200,220,245," + (g.a * 0.7).toFixed(3) + ")";
+      ctx.beginPath(); ctx.arc(BX(g.x), BY(g.y), g.r * Math.max(0.6, S * 1.2), 0, 6.2832); ctx.fill();
+    }
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+    /* --- le bois : des fuseaux, pas des traits ---
+       Une branche d'épaisseur constante fait un schéma ; une branche qui s'affine
+       vers sa pointe fait un arbre. On échantillonne la courbe, on décale de part
+       et d'autre de la normale d'une largeur qui décroît, et on remplit. */
+    function taper(sample, w0, w1, steps){
+      var L = [], R = [], i, t, p, a, b, dx, dy, len, nx, ny, w;
+      for(i = 0; i <= steps; i++){
+        t = i / steps;
+        p = sample(t);
+        a = sample(Math.max(0, t - 0.02)); b = sample(Math.min(1, t + 0.02));
+        dx = b.x - a.x; dy = b.y - a.y;
+        len = Math.hypot(dx, dy) || 1;
+        nx = -dy / len; ny = dx / len;
+        w = (w0 + (w1 - w0) * Math.pow(t, 0.7)) / 2;
+        L.push({ x: p.x + nx * w, y: p.y + ny * w });
+        R.push({ x: p.x - nx * w, y: p.y - ny * w });
+      }
+      ctx.beginPath();
+      ctx.moveTo(X(L[0].x), Y(L[0].y));
+      for(i = 1; i < L.length; i++) ctx.lineTo(X(L[i].x), Y(L[i].y));
+      for(i = R.length - 1; i >= 0; i--) ctx.lineTo(X(R[i].x), Y(R[i].y));
+      ctx.closePath();
+    }
+    function woodFill(p0, p1, hue, soft, alpha){
+      var g = ctx.createLinearGradient(X(p0.x), Y(p0.y), X(p1.x), Y(p1.y));
+      g.addColorStop(0, hexa("#2a3648", alpha));
+      g.addColorStop(0.45, hexa(hue, alpha * 0.85));
+      g.addColorStop(1, hexa(soft, alpha));
+      return g;
+    }
+
+    /* --- le tronc, évasé au pied comme une souche --- */
+    var trunkPath = trunkAt;
+    // trois racines qui mordent le sol
+    for(var ri = -1; ri <= 1; ri++){
+      if(!ri) continue;
+      (function(dir){
+        taper(function(t){
+          return { x: TRUNK.x + dir * t * 78, y: TRUNK.y + t * t * 30 };
+        }, 26, 3, 14);
+      })(ri);
+      ctx.fillStyle = hexa("#33415a", 0.75); ctx.fill();
+    }
+    taper(trunkPath, 54, 30, 26);
+    ctx.fillStyle = woodFill({ x:TRUNK.x, y:TRUNK.y }, { x:TRUNK.x, y:TRUNK.top },
+                             "#4a6180", "#8fb2d6", 0.95);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(12,18,26,.5)"; ctx.lineWidth = 1; ctx.stroke();
+
+    /* --- les quatre branches maîtresses --- */
+    for(q = 0; q < 4; q++){
+      Q = QUARTERS[q];
+      var lit = months[q*3].n + months[q*3+1].n + months[q*3+2].n > 0;
+      var tip = quarterTip(q);
+      taper(function(t){ return quarterAt(q, t); }, 30, 13, 30);
+      ctx.fillStyle = woodFill(quarterFoot(q), tip, Q.hue, Q.soft, lit ? 0.92 : 0.34);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(12,18,26,.45)"; ctx.lineWidth = 1; ctx.stroke();
+
+      var lp = quarterAt(q, 0.46);
+      var la = Math.atan2(quarterAt(q, 0.52).y - quarterAt(q, 0.40).y,
+                          quarterAt(q, 0.52).x - quarterAt(q, 0.40).x);
+      ctx.save();
+      ctx.translate(X(lp.x), Y(lp.y));
+      ctx.rotate(Math.abs(la) > Math.PI / 2 ? la + Math.PI : la);
+      ctx.font = '700 ' + (f * 0.80).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.letterSpacing = "0.16em";
+      ctx.shadowColor = "rgba(8,12,18,.9)"; ctx.shadowBlur = 6;
+      ctx.fillStyle = hexa(Q.soft, lit ? 0.98 : 0.5);
+      ctx.fillText(Q.tag, 0, -dpx(15));
+      ctx.shadowBlur = 0;
+      ctx.letterSpacing = "0px";
+      ctx.restore();
+    }
+
+    /* --- les rameaux des mois --- */
+    for(i = 0; i < 12; i++){
+      m = months[i]; Q = QUARTERS[m.q];
+      var l = m.limb;
+      (function(limb){
+        taper(function(t){ return limbAt(limb, t); }, 13, m.n ? 6 : 3.5, 20);
+      })(l);
+      ctx.fillStyle = woodFill(l.from, l.to, Q.hue, Q.soft,
+                               (m.n ? 0.9 : 0.3) + m.glow * 0.1);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(12,18,26,.4)"; ctx.lineWidth = 1; ctx.stroke();
+
+      var mp = limbAt(l, 0.52);
+      var ma = Math.atan2(limbAt(l, 0.6).y - limbAt(l, 0.44).y,
+                          limbAt(l, 0.6).x - limbAt(l, 0.44).x);
+      ctx.save();
+      ctx.translate(X(mp.x), Y(mp.y));
+      ctx.rotate(Math.abs(ma) > Math.PI / 2 ? ma + Math.PI : ma);
+      ctx.font = '700 ' + (f * 0.74).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.letterSpacing = "0.18em";
+      ctx.shadowColor = "rgba(8,12,18,.9)"; ctx.shadowBlur = 6;
+      ctx.fillStyle = m.n ? "rgba(232,240,250," + (0.72 + m.glow * 0.28).toFixed(2) + ")"
+                          : "rgba(150,163,182,.55)";
+      ctx.fillText(SHORT[i].toUpperCase() + (m.n ? "  " + m.n : ""), 0, -dpx(13));
+      ctx.shadowBlur = 0;
+      ctx.letterSpacing = "0px";
+      ctx.restore();
+    }
+
+    /* --- les fruits : une catégorie du SI, un fruit --- */
+    for(i = 0; i < 12; i++){
+      m = months[i];
+      for(var fi = 0; fi < m.fruits.length; fi++){
+        var fr = m.fruits[fi];
+        var fx = X(fr.x), fy = Y(fr.y);
+        var rr = dpx(fr.r) * (1 + fr.glow * 0.1);
+        var picked = state.fruit === fr.key;
+
+        // le pédoncule, du bout du rameau au fruit
+        ctx.strokeStyle = hexa(fr.cat.hue, 0.3 + fr.glow * 0.3);
+        ctx.lineWidth = dpx(1.6);
+        ctx.beginPath(); ctx.moveTo(X(m.x), Y(m.y)); ctx.lineTo(fx, fy); ctx.stroke();
+
+        // un fruit a du volume : ombre portée, chair dégradée, reflet, feuille
+        ctx.save();
+        ctx.shadowColor = "rgba(6,10,16,.75)";
+        ctx.shadowBlur = 14 * Math.max(0.7, S); ctx.shadowOffsetY = dpx(3);
+        ctx.fillStyle = hexa(fr.cat.hue, 0.9);
+        ctx.beginPath(); ctx.arc(fx, fy, rr, 0, 6.2832); ctx.fill();
+        ctx.restore();
+
+        ctx.shadowColor = fr.cat.hue;
+        ctx.shadowBlur = (8 + fr.glow * 26) * Math.max(0.7, S * 1.3);
+        var gf = ctx.createRadialGradient(fx - rr * 0.36, fy - rr * 0.42, rr * 0.08,
+                                          fx + rr * 0.1, fy + rr * 0.18, rr * 1.15);
+        // la chair s'assombrit vers le bord dans SA propre teinte : un dégradé
+        // qui finit sur du presque-noir donnait des fruits sales
+        gf.addColorStop(0, hexa(fr.cat.soft, 1));
+        gf.addColorStop(0.5, hexa(fr.cat.hue, 1));
+        gf.addColorStop(1, shade(fr.cat.hue, 0.45));
+        ctx.fillStyle = gf;
+        ctx.beginPath(); ctx.arc(fx, fy, rr, 0, 6.2832); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // le reflet : c'est lui qui donne la rondeur
+        var sp = ctx.createRadialGradient(fx - rr * 0.34, fy - rr * 0.4, 0,
+                                          fx - rr * 0.34, fy - rr * 0.4, rr * 0.55);
+        sp.addColorStop(0, "rgba(255,255,255,.55)");
+        sp.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = sp;
+        ctx.beginPath(); ctx.arc(fx - rr * 0.3, fy - rr * 0.36, rr * 0.55, 0, 6.2832); ctx.fill();
+
+        ctx.strokeStyle = hexa(fr.cat.soft, 0.35 + fr.glow * 0.5);
+        ctx.lineWidth = dpx(1.4);
+        ctx.beginPath(); ctx.arc(fx, fy, rr, 0, 6.2832); ctx.stroke();
+
+        // une feuille au point d'attache, côté rameau
+        var la2 = Math.atan2(Y(m.y) - fy, X(m.x) - fx);
+        ctx.save();
+        ctx.translate(fx + Math.cos(la2) * rr * 0.92, fy + Math.sin(la2) * rr * 0.92);
+        ctx.rotate(la2 + 0.5);
+        ctx.fillStyle = hexa(fr.cat.soft, 0.55);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rr * 0.42, rr * 0.17, 0, 0, 6.2832);
+        ctx.fill();
+        ctx.restore();
+        if(picked){
+          ctx.strokeStyle = "rgba(240,248,255,.92)"; ctx.lineWidth = dpx(2.2);
+          ctx.beginPath(); ctx.arc(fx, fy, rr + dpx(6), 0, 6.2832); ctx.stroke();
+        }
+
+        /* --- les pépins : les actualités, dans le fruit --- */
+        if(showPip > 0.02){
+          for(var pi = 0; pi < fr.pips.length; pi++){
+            var p = fr.pips[pi];
+            var px = fx + p.dx * rr, py = fy + p.dy * rr;
+            var hotPip = state.pip === p.id;
+            ctx.fillStyle = "rgba(22,28,38," + (0.85 * showPip).toFixed(2) + ")";
+            ctx.beginPath(); ctx.arc(px, py, dpx(hotPip ? 4.6 : 3.4), 0, 6.2832); ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255," + ((hotPip ? 0.95 : 0.6) * showPip).toFixed(2) + ")";
+            ctx.lineWidth = dpx(1.1);
+            ctx.beginPath(); ctx.arc(px, py, dpx(hotPip ? 4.6 : 3.4), 0, 6.2832); ctx.stroke();
+          }
+          if(fr.entries.length > fr.pips.length){
+            ctx.font = '600 ' + (f * 0.62).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillStyle = "rgba(255,255,255," + (0.7 * showPip).toFixed(2) + ")";
+            ctx.fillText("+" + (fr.entries.length - fr.pips.length), fx, fy + rr + dpx(9));
+          }
+        }
+
+        // l'étiquette de catégorie n'apparaît qu'en approchant
+        if(showFruit > 0.02){
+          ctx.font = '700 ' + (f * 0.62).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+          ctx.textAlign = "center"; ctx.textBaseline = "top";
+          ctx.letterSpacing = "0.1em";
+          ctx.fillStyle = hexa(fr.cat.soft, 0.9 * showFruit);
+          ctx.fillText(fr.cat.name.toUpperCase() + "  " + fr.entries.length,
+                       fx, fy + rr + dpx(5));
+          ctx.letterSpacing = "0px";
+        }
+      }
+    }
+
+    /* --- le cliché du pépin survolé, par-dessus tout le reste --- */
+    if(state.pip && showPip > 0.5){
+      var host = null, hp = null;
+      var fl = allFruits();
+      for(var hi = 0; hi < fl.length && !hp; hi++)
+        for(var hj = 0; hj < fl[hi].pips.length; hj++)
+          if(fl[hi].pips[hj].id === state.pip){ host = fl[hi]; hp = fl[hi].pips[hj]; break; }
+      var im = hp ? thumbFor(state.pip) : null;
+      if(im){
+        var rr2 = dpx(host.r);
+        var px2 = X(host.x) + hp.dx * rr2, py2 = Y(host.y) + hp.dy * rr2;
+        var bw = Math.max(66, Math.min(128, W * 0.13));
+        var bh = Math.min(bw * 1.35, Math.max(bw * 0.6,
+                   bw * (im.naturalHeight / im.naturalWidth || 1)));
+        var gap2 = dpx(9) + 9;
+        var bx = px2 - bw / 2, by = py2 - gap2 - bh, below = false;
+        if(by < 8){ by = py2 + gap2; below = true; }
+        bx = Math.max(8, Math.min(W - bw - 8, bx));
+        ctx.strokeStyle = "rgba(130,165,205,.35)"; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(px2, py2 + (below ? gap2 * 0.35 : -gap2 * 0.35));
+        ctx.lineTo(px2, below ? by : by + bh);
+        ctx.stroke();
+        ctx.save();
+        ctx.shadowColor = "rgba(2,3,8,.85)"; ctx.shadowBlur = 22; ctx.shadowOffsetY = 5;
+        ctx.fillStyle = "#141b25";
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.restore();
+        var sc = Math.max(bw / im.naturalWidth, bh / im.naturalHeight);
+        var dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(bx, by, bw, bh); ctx.clip();
+        ctx.drawImage(im, bx + (bw - dw) / 2, by + (bh - dh) / 2, dw, dh);
+        ctx.restore();
+        ctx.strokeStyle = "rgba(130,165,205,.5)"; ctx.lineWidth = 1;
+        ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+      }
+    }
+
+    /* --- le sujet, au pied du tronc --- */
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.font = '700 ' + (f * 1.15).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    ctx.letterSpacing = "0.2em";
+    ctx.fillStyle = "rgba(232,240,250,.96)";
+    ctx.fillText("LES SYSTÈMES D'INFOS", X(TRUNK.x), Y(TRUNK.y) + wpx(16));
+    var tot = state.entries.length;
+    ctx.font = '400 ' + (f * 0.76).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    ctx.letterSpacing = "0.14em";
+    ctx.fillStyle = "rgba(150,170,196,.9)";
+    ctx.fillText(state.loading ? "CHARGEMENT"
+      : state.year + "  ·  " + (tot ? tot + (tot > 1 ? " ACTUALITÉS" : " ACTUALITÉ") : "AUCUNE ACTUALITÉ"),
+      X(TRUNK.x), Y(TRUNK.y) + wpx(16) + f * 1.7);
+    ctx.letterSpacing = "0px";
+
+    // rappel du geste tant qu'on n'a pas assez zoomé pour voir les pépins
+    if(showPip < 0.05 && state.fruit === null){
+      ctx.font = '400 ' + (f * 0.68).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.letterSpacing = "0.12em";
+      ctx.fillStyle = "rgba(150,170,196,.55)";
+      ctx.fillText(showFruit < 0.5 ? "MOLETTE POUR APPROCHER LES FRUITS"
+                                   : "APPROCHEZ ENCORE POUR VOIR LES PÉPINS",
+                   W / 2, H - 14);
+      ctx.letterSpacing = "0px";
+    }
+  }
+
+  function frame(){ step(); draw(); requestAnimationFrame(frame); }
+
+  /* ---------------- viser ---------------- */
+  function toWorld(clientX, clientY){
+    var r = cv.getBoundingClientRect();
+    if(!r.width) return null;
+    return {
+      x: (clientX - r.left - r.width / 2) / (S * cam.k) + cam.x,
+      y: (clientY - r.top - r.height / 2) / (S * cam.k) + cam.y
+    };
+  }
+  /* Deux sortes de cibles, et l'une n'existe qu'une fois assez près : un pépin
+     ne se clique pas quand il n'est pas visible. */
+  function pick(clientX, clientY){
+    var w = toWorld(clientX, clientY);
+    if(!w) return null;
+    var pipVisible = cam.k >= K_PIP - 0.3;
+    var best = null, bd = 1e9;
+    var fruits = allFruits();
+    for(var i = 0; i < fruits.length; i++){
+      var fr = fruits[i];
+      var d = Math.hypot(w.x - fr.x, w.y - fr.y);
+      if(pipVisible){
+        for(var p = 0; p < fr.pips.length; p++){
+          var pp = fr.pips[p];
+          var dp = Math.hypot(w.x - (fr.x + pp.dx * fr.r), w.y - (fr.y + pp.dy * fr.r));
+          if(dp < fr.r * 0.42 + 6 && dp < bd){ bd = dp; best = { kind:"pip", fruit:fr, id:pp.id }; }
+        }
+      }
+      if(d < fr.r + 10 && d < bd){ bd = d; best = { kind:"fruit", fruit:fr }; }
+    }
+    if(best) return best;
+    // à défaut, le rameau du mois : cliquer une branche cadre le mois entier
+    for(var j = 0; j < 12; j++){
+      var m = months[j];
+      if(Math.hypot(w.x - m.x, w.y - m.y) < 44) return { kind:"month", month:m };
+    }
+    return null;
+  }
+  function look(cx, cy){
+    var t = pick(cx, cy);
+    var key = t && t.kind === "fruit" ? t.fruit.key : (t && t.kind === "pip" ? t.fruit.key : null);
+    var pip = t && t.kind === "pip" ? t.id : null;
+    var mo = t ? (t.kind === "month" ? t.month.i : t.fruit.month) : null;
+    if(key !== state.hover || pip !== state.pip || mo !== state.hoverMonth){
+      state.hover = key; state.pip = pip; state.hoverMonth = mo;
+      if(!motion) draw();
+    }
+    return t;
+  }
+
+  /* --------- les gestes --------- */
+  function fingers(){ var n = 0; for(var k in pointers) n++; return n; }
+  function twoOf(){ var a = []; for(var k in pointers) a.push(pointers[k]); return a; }
+
+  cv.addEventListener("pointerdown", function(ev){
+    pointers[ev.pointerId] = { x:ev.clientX, y:ev.clientY };
+    if(fingers() === 2){
+      var t = twoOf();
+      pinch = { d:Math.hypot(t[0].x - t[1].x, t[0].y - t[1].y) || 1 };
+      grab = null; dragged = true;
+      return;
+    }
+    if(fingers() > 2) return;
+    grab = { id:ev.pointerId, x:ev.clientX, y:ev.clientY, moved:0 };
+    dragged = false;
+    try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
+    cv.style.cursor = "grabbing";
+    look(ev.clientX, ev.clientY);
+  });
+  cv.addEventListener("pointermove", function(ev){
+    if(pointers[ev.pointerId]){
+      pointers[ev.pointerId].x = ev.clientX; pointers[ev.pointerId].y = ev.clientY;
+    }
+    lastPt = { x:ev.clientX, y:ev.clientY };
+    if(pinch && fingers() >= 2){
+      var t = twoOf();
+      var nd = Math.hypot(t[0].x - t[1].x, t[0].y - t[1].y) || 1;
+      zoomAt((t[0].x + t[1].x) / 2, (t[0].y + t[1].y) / 2, nd / pinch.d);
+      pinch.d = nd;
+      return;
+    }
+    if(grab && grab.id === ev.pointerId){
+      var dx = ev.clientX - grab.x, dy = ev.clientY - grab.y;
+      grab.moved += Math.abs(dx) + Math.abs(dy);
+      if(grab.moved > 5) dragged = true;
+      var z = S * cam.k;
+      cam.x = cam.tx = cam.x - dx / z;
+      cam.y = cam.ty = cam.y - dy / z;
+      clampCam(); placeCard();
+      grab.x = ev.clientX; grab.y = ev.clientY;
+      if(!motion) draw();
+      return;
+    }
+    cv.style.cursor = look(ev.clientX, ev.clientY) ? "pointer" : "grab";
+  });
+  function letGo(ev){
+    delete pointers[ev.pointerId];
+    if(fingers() < 2) pinch = null;
+    if(grab && grab.id === ev.pointerId){
+      try{ cv.releasePointerCapture(ev.pointerId); }catch(e){}
+      grab = null; cv.style.cursor = "grab";
+    }
+  }
+  cv.addEventListener("pointerup", letGo);
+  cv.addEventListener("pointercancel", letGo);
+  cv.addEventListener("pointerleave", function(ev){
+    if(grab) return;
+    delete pointers[ev.pointerId]; pinch = null;
+    lastPt = null; state.hover = null; state.pip = null; state.hoverMonth = null;
+  });
+  cv.addEventListener("wheel", function(ev){
+    ev.preventDefault();
+    var dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 380 : 1);
+    zoomAt(ev.clientX, ev.clientY, Math.exp(-dy * 0.0016));
+  }, { passive:false });
+
+  cv.addEventListener("click", function(ev){
+    if(dragged){ dragged = false; return; }
+    var t = pick(ev.clientX, ev.clientY);
+    if(!t){ closeCard(); return; }
+    if(t.kind === "pip"){ openEntry(t.id); return; }
+    if(t.kind === "month"){ selectMonth(t.month.i); return; }
+    // un fruit trop loin : on s'approche d'abord, on l'ouvre ensuite
+    if(cam.k < K_FRUIT) zoomTo(t.fruit);
+    selectFruit(t.fruit);
+  });
+  cv.addEventListener("dblclick", function(){ recentre(); });
+
+  cv.addEventListener("keydown", function(ev){
+    var k = ev.key;
+    lastPt = null;
+    if(k === "ArrowRight" || k === "ArrowDown"){ ev.preventDefault(); stepMonth(1); }
+    else if(k === "ArrowLeft" || k === "ArrowUp"){ ev.preventDefault(); stepMonth(-1); }
+    else if(k === "Enter" || k === " "){ ev.preventDefault(); selectMonth(state.focus); }
+    else if(k === "Escape"){ ev.preventDefault(); closeCard(); recentre(); }
+  });
+
+  /* --------- la fiche --------- */
+  var cardEl = document.getElementById("detail");
+  function anchor(){
+    if(state.fruit){
+      var fr = allFruits().filter(function(f){ return f.key === state.fruit; })[0];
+      if(fr) return { x:X(fr.x), y:Y(fr.y), r:dpx(fr.r) };
+    }
+    if(state.focus !== null && months[state.focus])
+      return { x:X(months[state.focus].x), y:Y(months[state.focus].y), r:dpx(20) };
+    return null;
+  }
+  function placeCard(){
+    if(cardEl.hidden) return;
+    var a = anchor();
+    if(!a) return;
+    var pr = cv.getBoundingClientRect(), pl = cardEl.parentNode.getBoundingClientRect();
+    var sx = a.x + (pr.left - pl.left), sy = a.y + (pr.top - pl.top);
+    var w = cardEl.offsetWidth, h = cardEl.offsetHeight;
+    var left = sx + a.r + 18, top = sy - h / 2;
+    if(left + w > pl.width - 10) left = sx - a.r - 18 - w;
+    cardEl.style.left = Math.max(10, Math.min(pl.width - w - 10, left)) + "px";
+    cardEl.style.top = Math.max(10, Math.min(pl.height - h - 10, top)) + "px";
+  }
+  function closeCard(){
+    cardEl.hidden = true;
+    state.fruit = null; state.focus = null;
+    renderReadout(); renderArrows();
+    if(!motion) draw();
+  }
+  function fillCard(titre, sous, entries, monthIdx){
+    document.getElementById("detailTitle").innerHTML =
+      esc(titre) + ' <span>· ' + esc(sous) + "</span>";
+    document.getElementById("detailList").innerHTML = entries.length
+      ? entries.slice(0, 5).map(function(e, k){
+          return '<li data-entry="' + e.id + '"><b>' + (k + 1) + '.</b> ' +
+            (e.thumb ? '<img src="' + e.thumb + '" alt="">' : "") +
+            '<span>' + esc(labelOf(e)) + '</span></li>';
+        }).join("")
+      : '<li class="none">Rien dans cette catégorie ce mois-ci.</li>';
+    cardEl.hidden = false;
+    state.focus = monthIdx;
+    renderReadout(); renderArrows(); placeCard();
+    if(!motion) draw();
+  }
+  function selectFruit(fr){
+    state.fruit = fr.key;
+    fillCard(fr.cat.name.toUpperCase(),
+             MONTHS[fr.month] + " · " + fr.entries.length +
+               (fr.entries.length > 1 ? " actualités" : " actualité"),
+             fr.entries, fr.month);
+  }
+  function selectMonth(i){
+    if(i === null || i === undefined) i = 0;
+    i = ((i % 12) + 12) % 12;
+    state.fruit = null;
+    var m = months[i], all = byMonth(i);
+    var repartition = m.fruits.map(function(f){
+      return f.cat.name + " " + f.entries.length; }).join(" · ");
+    fillCard(MONTHS[i].toUpperCase(),
+             all.length ? repartition : "aucune actualité", all, i);
+  }
+  function stepMonth(d){ selectMonth((state.focus === null ? 0 : state.focus) + d); }
+
+  cardEl.addEventListener("click", function(ev){
+    if(ev.target.closest("#detailShut")){ closeCard(); return; }
+    if(ev.target.closest("#detailWrite")){ openComposer(state.focus, null); return; }
+    if(ev.target.closest("#detailAll")){
+      document.getElementById("readout").scrollIntoView({
+        behavior: motion ? "smooth" : "auto", block: "start" });
+      return;
+    }
+    var li = ev.target.closest("[data-entry]");
+    if(li) openEntry(li.getAttribute("data-entry"));
+  });
+
+  function renderSrNav(){
+    document.getElementById("srnav").innerHTML = MONTHS.map(function(name, i){
+      return '<button data-level="' + i + '">' + name + " (" + byMonth(i).length + ")</button>";
+    }).join("");
+  }
+  document.getElementById("srnav").addEventListener("click", function(ev){
+    lastPt = null;
+    var b = ev.target.closest("[data-level]");
+    if(b) selectMonth(parseInt(b.getAttribute("data-level"), 10));
+  });
+
+  /* ---------------- lecture ---------------- */
+  function tagRow(e){
+    var bits = [];
+    if(e.country) bits.push('<span class="tag mood">' + esc(e.country) + '</span>');
+    if(e.lang)    bits.push('<span class="tag">' + esc(e.lang) + '</span>');
+    if(e.mood)    bits.push('<span class="tag mood">' + esc(e.mood) + '</span>');
+    (e.tags || []).forEach(function(x){ bits.push('<span class="tag">' + esc(x) + '</span>'); });
+    return bits.length ? '<div class="tags">' + bits.join("") + '</div>' : "";
+  }
+
+  // Une seule colonne, celle du mois qu'on regarde : le survol d'un point y
+  // déplie l'entrée, sinon elle liste les dernières.
+  function renderReadout(){
+    var ro = document.getElementById("readout");
+    if(state.focus === null){
+      ro.innerHTML = '<p class="idle">' +
+        (state.loading ? "Chargement" : "Choisissez un mois sur l'arbre") + '</p>';
+      return;
+    }
+    var fx = state.focus, all = byMonth(fx), n = all.length;
+    var prevM = (fx + 11) % 12, nextM = (fx + 1) % 12;
+    var head = '<div class="rhead"><div class="rtitle">' +
+      '<div class="rmonth">' + MONTHS[fx] + '</div>' +
+      '<div class="rsub">' + (state.loading ? "Chargement"
+        : (n ? n + (n > 1 ? " entrées" : " entrée") : "aucune entrée")) + '</div></div>' +
+      '<button class="act lead" data-new="' + fx + '">Écrire</button></div>' +
+      '<div class="rnav">' +
+        '<button class="act" data-month="' + prevM + '">‹ ' + MONTHS[prevM] + '</button>' +
+        '<button class="act" data-month="' + nextM + '">' + MONTHS[nextM] + ' ›</button>' +
+      '</div>';
+
+    if(!n){ ro.innerHTML = head + '<p class="rnone">Ce mois n\'a rien retenu.</p>'; return; }
+    ro.innerHTML = head + '<ul class="rlist">' + all.slice(-PREVIEW).reverse().map(function(e, k){
+      return '<li class="fade" style="animation-delay:' + (k * 32) + 'ms" data-entry="' + e.id + '">' +
+        '<span class="day">' + dayStamp(e) + '</span>' +
+        '<span class="ttl">' + esc(labelOf(e)) + '</span></li>';
+    }).join("") + '</ul>' +
+    (n > PREVIEW ? '<p class="rmore">+ ' + (n - PREVIEW) + " plus anciennes</p>" : "");
+  }
+
+  // Les chevrons des côtés : le seul chemin d'un mois à l'autre sur la carte.
+  function renderArrows(){
+    var f = state.focus === null ? 0 : state.focus;
+    var p = (f + 11) % 12, n = (f + 1) % 12;
+    var a = document.getElementById("prevM"), b = document.getElementById("nextM");
+    a.setAttribute("aria-label", "Mois précédent : " + MONTHS[p]); a.title = MONTHS[p];
+    b.setAttribute("aria-label", "Mois suivant : " + MONTHS[n]);   b.title = MONTHS[n];
+  }
+  document.getElementById("prevM").addEventListener("click", function(){ stepMonth(-1); });
+  document.getElementById("nextM").addEventListener("click", function(){ stepMonth(1); });
+
+  document.getElementById("readout").addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-month]");
+    if(b){ selectMonth(parseInt(b.getAttribute("data-month"), 10)); return; }
+    var nb = ev.target.closest("[data-new]");
+    if(nb){ openComposer(parseInt(nb.getAttribute("data-new"), 10), null); return; }
+    var li = ev.target.closest("[data-entry]");
+    if(li) openEntry(li.getAttribute("data-entry"));
+  });
+  document.getElementById("readout").addEventListener("mouseover", function(ev){
+    var li = ev.target.closest("[data-entry]");
+    if(li) setHover(li.getAttribute("data-entry"));
+  });
+
+  /* ---------------- panneau ---------------- */
+  var panel = document.getElementById("panel"),
+      veil  = document.getElementById("veil"),
+      pbody = document.getElementById("pbody"),
+      pfoot = document.getElementById("pfoot"),
+      lastFocus = null;
+
+  function showPanel(){
+    lastFocus = lastFocus || document.activeElement;
+    panel.classList.add("on"); veil.classList.add("on");
+    panel.setAttribute("aria-hidden","false");
+    document.getElementById("shut").focus();
+  }
+  function closePanel(){
+    panel.classList.remove("on"); veil.classList.remove("on");
+    panel.setAttribute("aria-hidden","true");
+    state.editing = null;
+    var lf = lastFocus; lastFocus = null;
+    if(lf && lf.focus) lf.focus();
+  }
+  function fullDate(iso){
+    var d = new Date(iso + "T12:00:00");
+    return pad(d.getDate()) + " " + SHORT[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function openEntry(id){
+    var e = entryById(id);
+    if(!e) return;
+    state.editing = null;
+    document.getElementById("pstamp").textContent = fullDate(e.date);
+    // On n'ouvre que du http(s) : une entrée peut venir d'un import, et un lien
+    // n'est pas forcément une adresse web sous prétexte qu'il est écrit là.
+    var src = e.link && /^https?:\/\//i.test(e.link) ? e.link : "";
+    pbody.innerHTML = '<article class="read">' +
+      (e.title ? '<h3>' + esc(e.title) + '</h3>' : "") +
+      (e.body ? '<p>' + esc(e.body) + '</p>' : "") +
+      (src ? '<p class="src"><a href="' + esc(src) + '" target="_blank" rel="noopener noreferrer">' +
+             esc(src.replace(/^https?:\/\//i, "").replace(/\/$/, "")) + '</a></p>' : "") +
+      tagRow(e) +
+      (e.thumb ? '<img id="shot" src="' + e.thumb + '" alt="" data-full="1">' : "") +
+      '<button class="kill" data-del="' + e.id + '">Supprimer</button></article>';
+    pfoot.innerHTML = '<button class="solid" data-edit="' + e.id + '">Modifier</button>';
+    if(e.hasPhoto){
+      store.get(imgKey(e.id)).then(function(full){
+        var img = document.getElementById("shot");
+        if(full && img) img.src = full;
+      });
+    }
+    showPanel();
+  }
+
+  function openComposer(month, entry){
+    var mi = entry ? monthOf(entry) : month;
+    if(!(mi >= 0 && mi < 12)) mi = state.focus;      // à défaut, le mois qu'on regarde
+    var isNew = !(entry && entry.id);                 // un brouillon n'a pas d'identifiant
+    var def = entry ? entry.date
+      : (today.getFullYear() === state.year && today.getMonth() === mi
+          ? state.year + "-" + pad(mi + 1) + "-" + pad(today.getDate())
+          : state.year + "-" + pad(mi + 1) + "-01");
+    document.getElementById("pstamp").textContent =
+      (isNew ? "Nouvelle entrée" : "Modifier") + " · " + MONTHS[mi].toLowerCase() + " " + state.year;
+    pbody.innerHTML =
+      '<div class="fld"><label for="f-date">Date</label>' +
+        '<input type="date" id="f-date" value="' + def + '" min="' + state.year + '-01-01" max="' + state.year + '-12-31"></div>' +
+      '<div class="fld"><label for="f-title">Titre</label>' +
+        '<input type="text" id="f-title" value="' + esc(entry && entry.title || "") + '" placeholder="Le vent a tourné"></div>' +
+      '<div class="fld"><label for="f-body">Texte</label>' +
+        '<textarea id="f-body" placeholder="Ce qui s\'est passé, ce que j\'en retiens…">' + esc(entry && entry.body || "") + '</textarea></div>' +
+      '<div class="fld"><label for="f-cat">Catégorie SI</label>' +
+        '<div class="swatch" id="f-cats">' +
+          CATS.map(function(c){
+            var on = (entry ? catOf(entry) : "securite") === c.id;
+            return '<button type="button" data-cat="' + c.id + '" aria-pressed="' +
+                   (on ? "true" : "false") + '" style="--h:' + c.hue + '">' +
+                   esc(c.name) + '</button>';
+          }).join("") +
+        '</div></div>' +
+      '<div class="duo">' +
+        '<div class="fld"><label for="f-country">Pays concerné</label>' +
+          '<input type="text" id="f-country" value="' + esc(entry && entry.country || "") + '" placeholder="Sénégal"></div>' +
+        '<div class="fld"><label for="f-lang">Langue de l\'article</label>' +
+          '<input type="text" id="f-lang" list="f-langs" value="' + esc(entry && entry.lang || "") + '" placeholder="français">' +
+          '<datalist id="f-langs">' +
+            LANGS.map(function(l){ return '<option value="' + l + '">'; }).join("") +
+          '</datalist></div>' +
+      '</div>' +
+      '<div class="fld"><label for="f-link">Lien — la source, fiable</label>' +
+        '<input type="text" id="f-link" inputmode="url" value="' + esc(entry && entry.link || "") + '" placeholder="https://…"></div>' +
+      '<div class="fld"><label for="f-photo">Photo</label><div class="shots">' +
+        '<input type="file" id="f-photo" accept="image/*">' +
+        (entry && entry.thumb ? '<img src="' + entry.thumb + '" alt=""><button class="act" id="dropPhoto">Retirer</button>' : "") +
+        '</div></div>' +
+      '<p class="alert" id="alert"></p>';
+    pfoot.innerHTML = '<div class="pair"><button class="hollow" id="cancel">Annuler</button>' +
+      '<button class="solid" id="save">Enregistrer</button></div>';
+    state.editing = isNew ? null : entry.id;
+    state.pendingPhoto = undefined;
+    showPanel();
+    var ta = document.getElementById("f-body");
+    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+
+  /* ---------------- photos ---------------- */
+  function shrink(file, maxSide, quality){
+    return new Promise(function(res, rej){
+      var reader = new FileReader();
+      reader.onerror = function(){ rej(new Error("read")); };
+      reader.onload = function(){
+        var im = new Image();
+        im.onerror = function(){ rej(new Error("decode")); };
+        im.onload = function(){
+          var s = Math.min(1, maxSide / Math.max(im.width, im.height));
+          var c2 = document.createElement("canvas");
+          c2.width = Math.max(1, Math.round(im.width * s));
+          c2.height = Math.max(1, Math.round(im.height * s));
+          var k2 = c2.getContext("2d");
+          k2.fillStyle = "#0A0C15"; k2.fillRect(0, 0, c2.width, c2.height);
+          k2.drawImage(im, 0, 0, c2.width, c2.height);
+          res(c2.toDataURL("image/jpeg", quality));
+        };
+        im.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ---------------- enregistrement ---------------- */
+  function collect(){
+    var date = document.getElementById("f-date").value;
+    if(!date || date.slice(0,4) !== String(state.year)) return null;
+    var chosen = document.querySelector("#f-cats button[aria-pressed=true]");
+    var link = document.getElementById("f-link").value.trim();
+    // le « https:// » est sous-entendu : on ne fait pas recopier ce qui se devine
+    if(link && !/^[a-z][a-z0-9+.-]*:/i.test(link)) link = "https://" + link;
+    return {
+      date: date,
+      title: document.getElementById("f-title").value.trim(),
+      body: document.getElementById("f-body").value.trim(),
+      cat: chosen ? chosen.getAttribute("data-cat") : "metier",
+      country: document.getElementById("f-country").value.trim().slice(0, 80),
+      lang: document.getElementById("f-lang").value.trim().slice(0, 40),
+      link: link
+    };
+  }
+
+  function saveEntry(){
+    var msg = document.getElementById("alert");
+    var f = collect();
+    if(!f){ msg.textContent = "Choisissez une date de l'année " + state.year + "."; return; }
+    if(f.link && !/^https?:\/\/[^\s\/]+\.[^\s]{2,}/i.test(f.link)){
+      msg.textContent = "Ce lien n'a pas l'air d'une adresse web."; return;
+    }
+    var prior = state.editing ? entryById(state.editing) : null;
+    var keepsPhoto = (state.pendingPhoto === undefined && prior && prior.hasPhoto) ||
+                     (state.pendingPhoto && state.pendingPhoto.full);
+    if(!f.body && !f.title && !keepsPhoto){
+      msg.textContent = "Écrivez au moins une ligne, ou ajoutez une photo."; return;
+    }
+    var btn = document.getElementById("save");
+    btn.disabled = true; btn.textContent = "Enregistrement";
+
+    var entry = prior || { id: uid(), thumb: null, hasPhoto: false };
+    var backup = prior ? JSON.parse(JSON.stringify(prior)) : null;
+    entry.date = f.date; entry.title = f.title; entry.body = f.body;
+    entry.country = f.country; entry.lang = f.lang; entry.link = f.link;
+    entry.cat = f.cat;
+
+    var chain = Promise.resolve();
+    if(state.pendingPhoto === null){
+      entry.thumb = null; entry.hasPhoto = false;
+      chain = store.del(imgKey(entry.id));
+    } else if(state.pendingPhoto){
+      entry.thumb = state.pendingPhoto.thumb; entry.hasPhoto = true;
+      chain = store.set(imgKey(entry.id), state.pendingPhoto.full);
+    }
+    if(state.pendingPhoto !== undefined) delete thumbs[entry.id];   // la vignette a changé
+    chain.then(function(){
+      if(!prior) state.entries.push(entry);
+      return saveYear();
+    }).then(function(r){
+      if(!r.ok){
+        if(prior && backup){ for(var k in backup) entry[k] = backup[k]; }
+        else state.entries = state.entries.filter(function(x){ return x.id !== entry.id; });
+        msg.textContent = r.msg;
+        btn.disabled = false; btn.textContent = "Enregistrer";
+        return;
+      }
+      build(); renderSrNav();
+      selectMonth(monthOf(entry));
+      closePanel();
+    });
+  }
+
+  function removeEntry(id){
+    var e = entryById(id);
+    if(!e) return;
+    if(!window.confirm("Supprimer cette entrée ? C'est définitif.")) return;
+    var backup = state.entries.slice();
+    state.entries = state.entries.filter(function(x){ return x.id !== id; });
+    saveYear().then(function(r){
+      if(!r.ok){
+        state.entries = backup;
+        setNote(r.msg, true);
+        return;
+      }
+      if(e.hasPhoto) store.del(imgKey(id));
+      delete thumbs[id];
+      if(state.hover === id) state.hover = null;
+      build(); renderSrNav(); renderReadout(); closePanel();
+    });
+  }
+
+  var noteTimer = null;
+  function setNote(msg, warn){
+    var el = document.getElementById("note");
+    el.textContent = msg || "";
+    el.className = "note" + (warn ? " warn" : "");
+    clearTimeout(noteTimer);
+    if(msg && !warn) noteTimer = setTimeout(function(){ el.textContent = ""; }, 6000);
+  }
+
+  function exportJSON(){
+    var data = {
+      format: "journal-de-bord-v1", annee: state.year, exporte_le: new Date().toISOString(),
+      entrees: state.entries.map(function(e){
+        return { date: e.date, titre: e.title, texte: e.body, humeur: e.mood,
+                 etiquettes: e.tags || [], photo: !!e.hasPhoto };
+      }).sort(function(a,b){ return a.date < b.date ? -1 : 1; })
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "journal-de-bord-" + state.year + ".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+    setNote("Texte exporté · photos conservées dans l'application");
+  }
+
+  /* ---------------- événements ---------------- */
+  document.getElementById("prevY").addEventListener("click", function(){ state.year--; loadYear(); });
+  document.getElementById("nextY").addEventListener("click", function(){ state.year++; loadYear(); });
+  document.getElementById("exportBtn").addEventListener("click", exportJSON);
+  document.getElementById("shut").addEventListener("click", closePanel);
+  veil.addEventListener("click", closePanel);
+  document.addEventListener("keydown", function(ev){
+    if(ev.key !== "Escape") return;
+    var lp = document.getElementById("loupe");
+    if(lp.classList.contains("on")){ lp.classList.remove("on"); return; }
+    if(panel.classList.contains("on")) closePanel();
+  });
+
+  pbody.addEventListener("click", function(ev){
+    var tg = ev.target;
+    var catBtn = tg.closest("[data-cat]");
+    if(catBtn){
+      Array.prototype.forEach.call(document.querySelectorAll("#f-cats button"),
+        function(b){ b.setAttribute("aria-pressed", "false"); });
+      catBtn.setAttribute("aria-pressed", "true");
+      return;
+    }
+    if(tg.id === "dropPhoto"){
+      state.pendingPhoto = null;
+      if(tg.previousElementSibling) tg.previousElementSibling.remove();
+      tg.remove(); return;
+    }
+    var dl = tg.closest("[data-del]");
+    if(dl){ removeEntry(dl.getAttribute("data-del")); return; }
+    var im = tg.closest("img[data-full]");
+    if(im){
+      var lp = document.getElementById("loupe");
+      document.getElementById("loupeImg").src = im.src;
+      lp.classList.add("on");
+    }
+  });
+
+  pfoot.addEventListener("click", function(ev){
+    var ed = ev.target.closest("[data-edit]");
+    if(ed){ openComposer(null, entryById(ed.getAttribute("data-edit"))); return; }
+    if(ev.target.id === "cancel"){
+      if(state.editing) openEntry(state.editing); else closePanel();
+      return;
+    }
+    if(ev.target.id === "save") saveEntry();
+  });
+
+  pbody.addEventListener("change", function(ev){
+    if(ev.target.id !== "f-photo") return;
+    var file = ev.target.files && ev.target.files[0];
+    if(!file) return;
+    document.getElementById("alert").textContent = "";
+    Promise.all([ shrink(file, 1200, .72), shrink(file, 190, .5) ])
+      .then(function(r){ state.pendingPhoto = { full:r[0], thumb:r[1] }; })
+      .catch(function(){
+        document.getElementById("alert").textContent =
+          "Cette image n'a pas pu être lue. Essayez un JPEG ou un PNG.";
+      });
+  });
+
+  document.getElementById("loupe").addEventListener("click", function(){ this.classList.remove("on"); });
+
+  /* La cloche de veille est sur cette page : quand on verse une actualité au
+     journal, inutile d'ouvrir un onglet — la fiche s'ouvre ici même. */
+  window.__veilleJournalHost = true;
+  window.addEventListener("veille:journal", function(ev){
+    ev.preventDefault();
+    var a = ev.detail || {};
+    var draft = draftFromVeille({ t:a.title, u:a.url, s:a.summary, src:a.source,
+      d:a.published_at || a.fetched_at, l:a.lang, conf:a.confirms,
+      trust:a.trust_level });
+    var an = parseInt(draft.date.slice(0, 4), 10);
+    if(an && an !== state.year){
+      state.year = an;
+      loadYear().then(function(){ openComposer(monthOf(draft), draft); });
+    } else openComposer(monthOf(draft), draft);
+  });
+
+  /* ---------------- venu de la veille ----------------
+     Le widget de veille ouvre le journal avec l'actualité dans le fragment
+     d'URL. On la décode et la fiche s'ouvre déjà remplie : il ne reste qu'à
+     écrire ce qu'on en retient. Le fragment ne quitte jamais le navigateur —
+     aucune requête, donc le journal marche même en fichier local.            */
+  function unpack(s){
+    try{
+      var b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+      while(b64.length % 4) b64 += "=";
+      var bin = atob(b64), bytes = new Uint8Array(bin.length);
+      for(var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }catch(e){ return null; }
+  }
+  function draftFromVeille(v){
+    var d = new Date(v.d || Date.now());
+    if(isNaN(d.getTime())) d = new Date();
+    var iso = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    var corps = (v.s ? v.s + "\n\n" : "") +
+      "— " + (v.src || "source") +
+      (v.trust === "officiel" ? " · source officielle"
+                              : (v.conf > 1 ? " · confirmé par " + v.conf + " sources" : ""));
+    return {
+      date: iso, title: v.t || "", body: corps, link: v.u || "",
+      lang: v.l === "en" ? "anglais" : (v.l === "fr" ? "français" : (v.l || "")),
+      country: "", tags: []
+    };
+  }
+  function takeVeille(){
+    var m = /(?:^|[#&])veille=([^&]+)/.exec(location.hash || "");
+    if(!m) return null;
+    var v = unpack(m[1]);
+    // on nettoie l'adresse : un rechargement ne doit pas rouvrir la même fiche
+    if(history.replaceState)
+      history.replaceState(null, "", location.pathname + location.search);
+    return v ? draftFromVeille(v) : null;
+  }
+
+  /* ---------------- démarrage ---------------- */
+  window.addEventListener("resize", resize);
+  build();
+  resize();
+  if(motion) requestAnimationFrame(frame); else { settle(); draw(); }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ if(!motion) draw(); });
+
+  var venu = takeVeille();
+  if(venu){
+    // l'actualité peut dater d'une autre année que celle affichée
+    var an = parseInt(venu.date.slice(0, 4), 10);
+    if(an && an !== state.year) state.year = an;
+  }
+  loadYear().then(function(){
+    if(!hasStore && !hasLocal)
+      setNote("Stockage indisponible : les entrées ne seront pas conservées.", true);
+    else if(!hasStore)
+      setNote("Entrées conservées dans ce navigateur.");
+    if(venu) openComposer(monthOf(venu), venu);
+  });
+})();
+</script>
+
+<!-- La veille SI : la cloche se pose dans le bandeau. Servie par le service
+     de veille ; ouvert en fichier local, le widget reste muet sans gêner. -->
+<script src="/veille/widget.js" data-api="/api"></script>
