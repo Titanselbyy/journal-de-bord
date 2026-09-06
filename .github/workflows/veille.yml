@@ -1,32 +1,49 @@
-# Réveille le service et déclenche une collecte.
+# Deux besoins distincts, deux rythmes.
 #
-# En offre gratuite, Render endort l'instance après quinze minutes sans trafic :
-# le planificateur interne ne tourne plus. Cette tâche prend le relais.
+#  · MAINTIEN EN ÉVEIL — Render endort une instance gratuite après quinze
+#    minutes sans trafic. Un appel toutes les dix minutes la garde debout, et
+#    évite à un visiteur d'attendre cinquante secondes de réveil.
+#  · COLLECTE — deux fois par heure suffisent, et le service impose de toute
+#    façon un délai minimal entre deux passes.
 #
-# À faire une fois, dans le dépôt GitHub :
+# À créer une fois dans le dépôt :
 #   Settings → Secrets and variables → Actions → New repository secret
-#     VEILLE_URL    https://<votre-service>.onrender.com
-#     VEILLE_TOKEN  (Render → veille-si → Environment → VEILLE_TOKEN)
+#     VEILLE_URL    https://<votre-service>.onrender.com   (sans barre finale)
+#     VEILLE_TOKEN  Render → veille-si → Environment → VEILLE_TOKEN
 
-name: Collecte de veille
+name: Veille SI
 
 on:
   schedule:
-    - cron: "*/30 * * * *"    # toutes les 30 minutes (UTC)
-  workflow_dispatch:           # et à la demande, depuis l'onglet Actions
+    - cron: "*/10 * * * *"     # maintien en éveil
+    - cron: "4,34 * * * *"     # collecte, deux fois par heure
+  workflow_dispatch:            # et à la demande, onglet Actions
+
+concurrency:
+  group: veille
+  cancel-in-progress: false
 
 jobs:
-  collecte:
+  eveil:
+    if: github.event.schedule == '*/10 * * * *'
     runs-on: ubuntu-latest
     steps:
-      - name: Réveiller le service
+      - name: Garder le service debout
         run: |
-          # Le réveil peut prendre une minute : on patiente plutôt que d'échouer.
+          curl -s -m 90 --retry 2 --retry-delay 15 --retry-all-errors \
+               -o /dev/null -w "éveil : %{http_code} en %{time_total}s\n" \
+               "${{ secrets.VEILLE_URL }}/api/state"
+
+  collecte:
+    if: github.event.schedule != '*/10 * * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Réveiller si besoin
+        run: |
           curl -s -m 90 --retry 3 --retry-delay 20 --retry-all-errors \
                -o /dev/null -w "réveil : %{http_code}\n" \
                "${{ secrets.VEILLE_URL }}/api/state"
-
-      - name: Déclencher la collecte
+      - name: Collecter
         run: |
           curl -s -m 120 -X POST \
                -H "X-Veille-Token: ${{ secrets.VEILLE_TOKEN }}" \

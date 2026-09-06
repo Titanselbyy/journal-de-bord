@@ -11,10 +11,16 @@
   var script = document.currentScript;
   var API = (script && script.dataset.api) || "/api";
   var MOUNT = (script && script.dataset.mount) || "#veille";
+  /* data-dock : au lieu d'un menu déroulant sous la cloche, le panneau se pose
+     dans un conteneur à soi et reste ouvert. La cloche garde son compteur et
+     sert d'interrupteur. C'est ce que fait le journal, où veille et arbre
+     doivent tenir côte à côte. */
+  var DOCK = (script && script.dataset.dock) || "";
   var POLL_MS = Number(script && script.dataset.poll) || 60000;
   var JOURNAL = (script && script.dataset.journal) || "";   // vide : pas de bouton
 
-  var state = { unread: 0, open: false, items: [], loading: false, cursor: null, busy: false };
+  var state = { unread: 0, open: false, items: [], loading: false, cursor: null,
+                busy: false, docked: false };
   var el = {};
 
   /* ---------------- styles ---------------- */
@@ -36,6 +42,8 @@
       "background:#1b2431;color:#e7eff9;border:1px solid rgba(130,165,205,.28);border-radius:12px;",
       "box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}",
     ".vl-panel[hidden]{display:none}",
+    ".vl-panel.vl-docked{position:static;width:100%;max-height:none;height:100%;",
+      "pointer-events:auto;backdrop-filter:blur(6px);background:rgba(24,32,44,.9)}",
     ".vl-head{display:flex;align-items:center;gap:10px;padding:12px 14px;",
       "border-bottom:1px solid rgba(130,165,205,.16)}",
     ".vl-title{flex:1;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}",
@@ -256,7 +264,8 @@
     state.open = force === undefined ? !state.open : force;
     el.panel.hidden = !state.open;
     el.bell.setAttribute("aria-expanded", String(state.open));
-    if(state.open){ load(); el.refresh.focus(); }
+    // amarré, le panneau fait partie de la page : il ne vole pas le curseur
+    if(state.open){ load(); if(!state.docked) el.refresh.focus(); }
   }
 
   /* ---------------- construction ---------------- */
@@ -287,9 +296,11 @@
     el.bell.appendChild(el.dot);
     wrap.appendChild(el.bell);
 
+    var dockHost = DOCK ? document.querySelector(DOCK) : null;
     el.panel = document.createElement("div");
-    el.panel.className = "vl-panel";
-    el.panel.hidden = true;
+    el.panel.className = "vl-panel" + (dockHost ? " vl-docked" : "");
+    el.panel.hidden = !dockHost;          // amarré : ouvert d'emblée
+    state.open = state.docked = !!dockHost;
     el.panel.setAttribute("role", "dialog");
     el.panel.setAttribute("aria-label", "Veille Systèmes d'information");
 
@@ -323,7 +334,8 @@
     foot.appendChild(el.info);
     el.panel.appendChild(foot);
 
-    wrap.appendChild(el.panel);
+    if(dockHost) dockHost.appendChild(el.panel);
+    else wrap.appendChild(el.panel);
     host.appendChild(wrap);
 
     /* ---------------- écoutes ---------------- */
@@ -375,7 +387,10 @@
     document.addEventListener("keydown", function(ev){
       if(ev.key === "Escape" && state.open){ toggle(false); el.bell.focus(); }
     });
+    // Amarré, le panneau ne se referme pas quand on clique ailleurs : il fait
+    // partie de la page, il n'est pas un menu.
     document.addEventListener("click", function(ev){
+      if(dockHost) return;
       if(state.open && !wrap.contains(ev.target)) toggle(false);
     });
   }
@@ -417,6 +432,7 @@
     style(); build();
     api("/state").then(function(d){
       state.unread = d.unread; paintBadge(); paintFoot();
+      if(state.open) load();               // amarré : la liste s'affiche d'emblée
     }).catch(function(){ paintFoot("Service injoignable"); });
     live();
   }

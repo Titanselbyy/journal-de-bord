@@ -55,6 +55,17 @@
   canvas:focus{outline:none}
   canvas:focus-visible{outline:1px solid var(--web);outline-offset:0}
 
+  /* La veille, en colonne le long de l'arbre : les deux moitiés du projet sur
+     la même page, sans clic préalable. Sous 1000 px, elle passe en bandeau bas —
+     une colonne de 340 px sur un téléphone ne laisserait plus voir l'arbre. */
+  #veille-dock{position:absolute;top:16px;right:16px;bottom:16px;width:340px;z-index:3;
+    display:flex;pointer-events:none;border-radius:12px;overflow:hidden;
+    box-shadow:0 18px 46px rgba(0,0,0,.45)}
+  #veille-dock:empty{display:none}
+  @media (max-width:1000px){
+    #veille-dock{top:auto;left:16px;right:16px;bottom:16px;width:auto;height:44vh}
+  }
+
   /* la fiche d'un mois : elle s'accroche à son nœud */
   .detail{position:absolute;z-index:3;width:296px;max-width:calc(100% - 28px);
     font-family:var(--display);background:rgba(24,32,44,.94);
@@ -250,6 +261,7 @@
   <div class="plate">
     <button class="step prev" id="prevM" type="button"><i></i></button>
     <button class="step next" id="nextM" type="button"><i></i></button>
+    <div id="veille-dock" aria-label="Veille Systèmes d'information"></div>
     <aside class="detail" id="detail" hidden>
       <header>
         <h4 id="detailTitle"></h4>
@@ -1658,4 +1670,5 @@
 
 <!-- La veille SI : la cloche se pose dans le bandeau. Servie par le service
      de veille ; ouvert en fichier local, le widget reste muet sans gêner. -->
-<script src="/veille/widget.js" data-api="/api"></script>
+<script src="/veille/widget.js" data-api="/api"
+        data-mount="#veille" data-dock="#veille-dock"></script>
