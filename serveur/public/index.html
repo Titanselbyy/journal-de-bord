@@ -6,14 +6,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;1,6..72,200;1,6..72,300&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#121821;
-    --ink2:#1b2431;
-    --web:rgba(130,165,205,.17);
-    --web2:rgba(130,165,205,.34);
-    --star:#e7eff9;
-    --mute:#93a3b8;
-    --faint:#65748a;
-    --rose:#e08a72;
+    /* Bleu nuit et cuivre, d'après la référence. Les lignes et les bordures
+       prennent une pointe de cuivre plutôt que du bleu : c'est ce qui fait
+       tenir ensemble le bois de l'arbre et le mobilier de la page. */
+    --ink:#0d1b2c;
+    --ink2:#16283f;
+    --web:rgba(201,168,133,.16);
+    --web2:rgba(201,168,133,.32);
+    --star:#f0e8dc;
+    --mute:#a6968a;
+    --faint:#6f7f92;
+    --rose:#c9705e;
+    --cuivre:#c9885c;
     --display:"Syne","Helvetica Neue",Helvetica,sans-serif;
     --prose:"Newsreader",Georgia,"Times New Roman",serif;
     color-scheme:dark;
@@ -24,7 +28,7 @@
     min-height:100vh;color:var(--star);font-family:var(--prose);font-weight:300;
     -webkit-font-smoothing:antialiased;
     background:
-      radial-gradient(130% 90% at 50% 24%,#26313f 0%,#1a222d 46%,var(--ink) 100%);
+      radial-gradient(72% 62% at 50% 44%,#1e3552 0%,#14273f 46%,var(--ink) 100%);
   }
   button{font-family:inherit;color:inherit;cursor:pointer;background:none;border:none;padding:0}
   :focus-visible{outline:1px solid var(--web2);outline-offset:5px}
@@ -35,7 +39,7 @@
      la colonne de texte, il flottait au milieu d'un écran occupé de bord à bord. */
   .masthead{display:flex;align-items:center;justify-content:space-between;gap:14px;
     width:100vw;margin-left:calc(50% - 50vw);padding:13px 26px;
-    border-bottom:1px solid var(--web);background:rgba(18,24,33,.55)}
+    border-bottom:1px solid var(--web);background:rgba(11,23,38,.6)}
   .wordmark{font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.34em;
     text-transform:uppercase;color:var(--star);text-indent:.34em}
   .yearnav{display:flex;align-items:center;gap:18px}
@@ -49,9 +53,13 @@
   .plate{position:relative;width:100vw;margin-left:calc(50% - 50vw);
     height:calc(100vh - 58px);height:calc(100dvh - 58px);
     overflow:hidden;border-bottom:1px solid rgba(130,165,205,.18);
-    background:radial-gradient(120% 100% at 50% 78%,#3a4a64 0%,#253143 44%,#151c26 100%);
-    box-shadow:inset 0 -90px 140px rgba(0,0,0,.5)}
-  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+    /* L'image n'est plus posée en fond CSS : c'est le canevas qui la dessine.
+       Sinon le navigateur et le code calculent chacun leur cadrage, et les
+       zones sensibles glissent de quelques dizaines de pixels par rapport au
+       dessin. Une seule vérité, celle du canevas. */
+    background:#14243c;
+    box-shadow:inset 0 0 200px rgba(4,10,20,.35)}
+  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:default}
   canvas:focus{outline:none}
   canvas:focus-visible{outline:1px solid var(--web);outline-offset:0}
 
@@ -62,9 +70,44 @@
     display:flex;pointer-events:none;border-radius:12px;overflow:hidden;
     box-shadow:0 18px 46px rgba(0,0,0,.45)}
   #veille-dock:empty{display:none}
+  /* Fermée, la colonne ne doit rien laisser derrière elle : son ombre portée
+     resterait dessinée sur l'arbre. La règle du navigateur pour [hidden] ne
+     suffit pas — le display:flex ci-dessus l'emporte. */
+  #veille-dock[hidden]{display:none}
   @media (max-width:1000px){
     #veille-dock{top:auto;left:16px;right:16px;bottom:16px;width:auto;height:44vh}
   }
+
+  /* Le retour : il remplace le cercle une fois qu'on s'est approché d'une
+     branche. Dans l'angle libre, à gauche — la veille occupe la droite. */
+  .retour{position:absolute;top:18px;left:18px;z-index:4;
+    font-family:var(--display);font-weight:600;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--mute);padding:10px 16px 10px 30px;
+    border:1px solid var(--web2);border-radius:8px;background:rgba(13,27,44,.72);
+    transition:color .2s,border-color .2s,background .2s}
+  .retour::before{content:"";position:absolute;left:14px;top:50%;width:7px;height:7px;
+    margin-top:-4px;border-left:1px solid currentColor;border-bottom:1px solid currentColor;
+    transform:rotate(45deg)}
+  .retour:hover{color:var(--star);border-color:var(--cuivre);background:rgba(20,38,60,.9)}
+  .retour[hidden]{display:none}
+
+  /* Le mois retenu ne déroule plus une fiche de choix : un cercle marqué d'un
+     plus se pose sur sa pointe. Le seul geste qu'elle proposait vraiment —
+     écrire — tient dans ce cercle ; lire les entrées du mois se fait déjà dans
+     la colonne, sous l'arbre. */
+  .plus{position:absolute;z-index:3;width:46px;height:46px;border-radius:50%;
+    border:1px solid var(--web2);background:rgba(13,27,44,.72);color:var(--mute);
+    box-shadow:0 10px 26px rgba(0,0,0,.45);
+    transition:color .2s,border-color .2s,background .2s,transform .2s}
+  .plus::before,.plus::after{content:"";position:absolute;left:50%;top:50%;
+    background:currentColor;transform:translate(-50%,-50%)}
+  .plus::before{width:15px;height:1.5px}
+  .plus::after{width:1.5px;height:15px}
+  .plus:hover{color:var(--star);border-color:var(--cuivre);
+    background:rgba(20,38,60,.92);transform:scale(1.08)}
+  .plus:focus-visible{outline:1px solid var(--cuivre);outline-offset:2px}
+  .plus[hidden]{display:none}
+  @media (prefers-reduced-motion:reduce){.plus{transition:none}}
 
   /* la fiche d'un mois : elle s'accroche à son nœud */
   .detail{position:absolute;z-index:3;width:296px;max-width:calc(100% - 28px);
@@ -261,7 +304,9 @@
   <div class="plate">
     <button class="step prev" id="prevM" type="button"><i></i></button>
     <button class="step next" id="nextM" type="button"><i></i></button>
+    <button class="retour" id="retour" type="button" hidden>Retour</button>
     <div id="veille-dock" aria-label="Veille Systèmes d'information"></div>
+    <button class="plus" id="plus" type="button" hidden></button>
     <aside class="detail" id="detail" hidden>
       <header>
         <h4 id="detailTitle"></h4>
@@ -274,7 +319,7 @@
       </div>
     </aside>
     <canvas id="chart" tabindex="0" role="application"
-      aria-label="Carte du mois. Chaque point est une entrée, le cercle marqué d'un plus ouvre l'écriture. Glissez pour déplacer la carte, molette ou pincement pour zoomer. Flèches pour parcourir les entrées, Entrée pour ouvrir, Maj plus flèches pour changer de mois, Échap pour recentrer."></canvas>
+      aria-label="Carte du mois. Chaque point est une entrée, le cercle marqué d'un plus ouvre l'écriture. Flèches pour parcourir les entrées, Entrée pour ouvrir, Maj plus flèches pour changer de mois, Échap pour recentrer."></canvas>
   </div>
   <nav class="sr-only" id="srnav" aria-label="Mois"></nav>
 
@@ -313,13 +358,44 @@
   var motion = !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   /* ---------------- stockage ---------------- */
-  /* Trois niveaux de conservation, du meilleur au pire :
-       1. window.storage — l'API de la page hôte, quand il y en a une ;
-       2. localStorage   — le navigateur. C'est ce qui fait qu'un journal mis en
-                           ligne (Render, un hébergement statique) retient ce
-                           qu'on y écrit, au lieu de tout perdre au rechargement ;
-       3. la mémoire vive — dernier recours (navigation privée, stockage bloqué).
-     Le troisième cas est le seul qui mérite un avertissement à l'écran.        */
+  /* Quatre niveaux de conservation, du plus sûr au moins sûr :
+       1. le SERVEUR    — une base qui survit aux redéploiements et se partage
+                          entre vos appareils. C'est la référence : ce qu'elle
+                          contient l'emporte à la lecture ;
+       2. window.storage — l'API de la page hôte, s'il y en a une ;
+       3. localStorage   — le navigateur, qui sert aussi de cache hors ligne
+                          et de filet quand le serveur ne répond pas ;
+       4. la mémoire vive — dernier recours (navigation privée, stockage bloqué).
+     Toute écriture va au serveur ET au cache local : si le serveur est
+     injoignable, le texte n'est pas perdu, il est simplement local ce jour-là.
+     On le dit alors à l'écran plutôt que de laisser croire à une sauvegarde.  */
+  var API = "/api/journal/";
+  var serveurOk = null;              // null tant qu'on n'a pas essayé
+  var horsLigne = false;             // vrai dès qu'une écriture n'a pas pu partir
+
+  function versServeur(k){ return API + encodeURIComponent(k); }
+  function litServeur(k){
+    return fetch(versServeur(k), { credentials:"include" }).then(function(r){
+      if(r.status === 404){ serveurOk = true; return null; }
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json().then(function(d){ serveurOk = true; return d.value; });
+    });
+  }
+  function ecritServeur(k, v){
+    return fetch(versServeur(k), {
+      method: "PUT", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: v })
+    }).then(function(r){
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      serveurOk = true; return true;
+    });
+  }
+  function effaceServeur(k){
+    return fetch(versServeur(k), { method:"DELETE", credentials:"include" })
+           .then(function(){ return true; });
+  }
+
   var hasStore = (typeof window.storage === "object" && window.storage !== null &&
                   typeof window.storage.get === "function");
   var hasLocal = (function(){
@@ -331,36 +407,81 @@
     }catch(e){ return false; }
   })();
   var mem = {};
+  function litLocal(k){
+    if(hasStore)
+      return window.storage.get(k,false).then(function(r){ return r ? r.value : null; })
+             .catch(function(){ return null; });
+    if(hasLocal){
+      try{ return Promise.resolve(window.localStorage.getItem(k)); }
+      catch(e){ return Promise.resolve(null); }
+    }
+    return Promise.resolve(Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null);
+  }
+  function ecritLocal(k, v){
+    if(hasStore)
+      return window.storage.set(k,v,false).then(function(r){ return !!r; })
+             .catch(function(){ return false; });
+    if(hasLocal){
+      try{ window.localStorage.setItem(k, v); return Promise.resolve(true); }
+      catch(e){ return Promise.resolve(false); }     // quota dépassé
+    }
+    mem[k]=v; return Promise.resolve(true);
+  }
+  function effaceLocal(k){
+    if(hasStore)
+      return window.storage.delete(k,false).then(function(){ return true; })
+             .catch(function(){ return false; });
+    if(hasLocal){
+      try{ window.localStorage.removeItem(k); }catch(e){}
+      return Promise.resolve(true);
+    }
+    delete mem[k]; return Promise.resolve(true);
+  }
+
+  /* On dit franchement où atterrit ce qui est écrit. Trois cas seulement, et
+     l'utilisateur doit pouvoir les distinguer d'un coup d'œil : sauvegardé
+     partout, sauvegardé ici seulement, ou pas sauvegardé du tout. */
+  function noteStockage(){
+    if(!hasStore && !hasLocal && serveurOk !== true)
+      return setNote("Stockage indisponible : les entrées ne seront pas conservées.", true);
+    if(horsLigne || serveurOk === false)
+      return setNote("Serveur injoignable : enregistré dans ce navigateur seulement.", true);
+    if(serveurOk === true) return setNote("Entrées enregistrées sur le serveur.");
+    setNote("Entrées conservées dans ce navigateur.");
+  }
+
   var store = {
+    /* Le serveur fait foi ; le cache local prend le relais s'il ne répond pas.
+       On rafraîchit le cache au passage, pour que la lecture hors ligne
+       retrouve la dernière version connue. */
     get: function(k){
-      if(hasStore)
-        return window.storage.get(k,false).then(function(r){ return r ? r.value : null; })
-               .catch(function(){ return null; });
-      if(hasLocal){
-        try{ return Promise.resolve(window.localStorage.getItem(k)); }
-        catch(e){ return Promise.resolve(null); }
-      }
-      return Promise.resolve(Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null);
+      return litServeur(k).then(function(v){
+        if(v === null) return litLocal(k);        // absent du serveur : peut-être local
+        ecritLocal(k, v);
+        return v;
+      }).catch(function(){
+        serveurOk = false;
+        return litLocal(k);
+      });
     },
+    /* On écrit d'abord en local — c'est immédiat et ça ne peut pas échouer en
+       route — puis on pousse au serveur. Un échec réseau ne fait donc jamais
+       perdre le texte : il le laisse seulement dans ce navigateur. */
     set: function(k,v){
-      if(hasStore)
-        return window.storage.set(k,v,false).then(function(r){ return !!r; })
-               .catch(function(){ return false; });
-      if(hasLocal){
-        try{ window.localStorage.setItem(k, v); return Promise.resolve(true); }
-        catch(e){ return Promise.resolve(false); }   // quota dépassé : on le dit
-      }
-      mem[k]=v; return Promise.resolve(true);
+      return ecritLocal(k, v).then(function(okLocal){
+        return ecritServeur(k, v).then(function(){
+          if(horsLigne){ horsLigne = false; noteStockage(); }
+          return true;
+        }).catch(function(){
+          if(!horsLigne){ horsLigne = true; noteStockage(); }
+          return okLocal;
+        });
+      });
     },
     del: function(k){
-      if(hasStore)
-        return window.storage.delete(k,false).then(function(){ return true; })
-               .catch(function(){ return false; });
-      if(hasLocal){
-        try{ window.localStorage.removeItem(k); }catch(e){}
-        return Promise.resolve(true);
-      }
-      delete mem[k]; return Promise.resolve(true);
+      return effaceLocal(k).then(function(){
+        return effaceServeur(k).catch(function(){ return true; });
+      });
     }
   };
   function yearKey(y){ return "jdb:v1:" + y; }
@@ -412,7 +533,7 @@
       state.entries = (data && Array.isArray(data.entries)) ? data.entries : [];
       state.loading = false;
       build();
-      selectMonth(firstMonth());
+      selectMonth(firstMonth(), true);
       renderSrNav();
     });
   }
@@ -433,29 +554,28 @@
   var GOLD = 2.399963;
 
   /* --------- l'arbre ---------
-     Cinq étages, du sol à la cueillette :
-       le TRONC    porte le sujet — les systèmes d'information ;
-       4 BRANCHES  les trimestres ;
-       12 RAMEAUX  les mois, trois par trimestre ;
-       les FRUITS  les catégories du SI présentes ce mois-là ;
-       les PÉPINS  les actualités elles-mêmes, à l'intérieur du fruit.
-     On ne montre pas tout à la fois : les fruits n'apparaissent qu'en approchant,
-     les pépins qu'en s'approchant encore. Un arbre vu de loin, c'est une
-     silhouette ; de près seulement, on distingue ce qu'il porte.               */
+     Dessiné d'après la référence : bois cuivré éclairé de biais, branches
+     longues et effilées en aiguille, base en deux arcs qui s'ouvrent en coupe,
+     feuilles vert sauge. La couleur ne sert qu'aux feuilles — une catégorie,
+     une teinte — pour que le bois reste d'une seule matière.
+
+     Cinq étages : le tronc porte le sujet, quatre branches les trimestres,
+     douze rameaux les mois, les feuilles les catégories, et les actualités
+     s'égrènent le long du pétiole quand on approche.                          */
+
+  var BOIS = { clair:"#e8b085", moyen:"#c9885c", sombre:"#8a5231", coeur:"#a8663c" };
 
   var CATS = [
-    { id:"securite",   name:"Sécurité",      hue:"#e5695f", soft:"#ffb3ab" },
-    { id:"infra",      name:"Infrastructure", hue:"#56b7e8", soft:"#a8e0fa" },
-    { id:"donnees",    name:"Données",       hue:"#c58ae8", soft:"#e2c4f5" },
-    { id:"innovation", name:"Innovation",    hue:"#5fd07f", soft:"#aeeec0" },
-    { id:"reglement",  name:"Réglementation", hue:"#f2c245", soft:"#ffe6a0" },
-    { id:"metier",     name:"Métier",        hue:"#f2825a", soft:"#ffc0a4" }
+    { id:"securite",   name:"Sécurité",       hue:"#c9705e", soft:"#e8a294" },
+    { id:"infra",      name:"Infrastructure", hue:"#6d8fae", soft:"#a3c0d8" },
+    { id:"donnees",    name:"Données",        hue:"#9a7fa8", soft:"#c8b2d2" },
+    { id:"innovation", name:"Innovation",     hue:"#7d9268", soft:"#a9bf94" },
+    { id:"reglement",  name:"Réglementation", hue:"#c9a961", soft:"#e6cf96" },
+    { id:"metier",     name:"Métier",         hue:"#7f8a99", soft:"#aeb8c6" }
   ];
   var CAT_BY_ID = {};
   CATS.forEach(function(c){ CAT_BY_ID[c.id] = c; });
 
-  /* Une entrée sans catégorie choisie est rangée d'après ses mots : les anciennes
-     entrées ne se retrouvent pas toutes dans un fourre-tout. */
   var CAT_RULES = [
     ["securite",   /s[ée]curit|faille|vuln[ée]rab|ransomware|cyber|piratage|attaque|CERT|CVE|phishing|fuite/i],
     ["reglement",  /RGPD|GDPR|NIS ?2|DORA|AI Act|loi|d[ée]cret|directive|CNIL|amende|sanction|conformit|juridique/i],
@@ -472,102 +592,76 @@
     return "metier";
   }
 
-  var TRUNK = { x:800, y:975, top:700 };
+  /* Le monde : 1600 de large, l'arbre posé au milieu, la coupe en bas. */
+  var SOL = 980, AXE = 800, FOURCHE = 560;
+
+  /* Les quatre branches maîtresses. La référence en montre six, deux basses très
+     ouvertes et quatre montantes ; on garde ce dessin avec quatre trimestres :
+     deux bas et larges, deux hauts et dressés. */
   var QUARTERS = [
-    { d:[-0.95, -0.31], len:335, hue:"#56b7e8", soft:"#a8e0fa", tag:"T1 · JANV — MARS" },
-    { d:[-0.33, -0.945], len:360, hue:"#5fd07f", soft:"#aeeec0", tag:"T2 · AVRIL — JUIN" },
-    { d:[ 0.33, -0.945], len:360, hue:"#f2c245", soft:"#ffe6a0", tag:"T3 · JUIL — SEPT" },
-    { d:[ 0.95, -0.31], len:335, hue:"#f2825a", soft:"#ffc0a4", tag:"T4 · OCT — DÉC" }
+    { tag:"T1 · JANV — MARS",  cote:-1, depart:0.16, angle:-2.62, len:430, courbe:-0.30 },
+    { tag:"T2 · AVRIL — JUIN", cote:-1, depart:0.55, angle:-1.94, len:470, courbe:-0.16 },
+    { tag:"T3 · JUIL — SEPT",  cote: 1, depart:0.55, angle:-1.20, len:470, courbe: 0.16 },
+    { tag:"T4 · OCT — DÉC",    cote: 1, depart:0.16, angle:-0.52, len:430, courbe: 0.30 }
   ];
-  var SPREAD = 0.66;        // ouverture des trois rameaux autour de leur branche
-  var LIMB = 245;           // longueur d'un rameau de mois
-  var FRUIT_R = 74;         // rayon de la couronne de fruits au bout du rameau
-  var K_FRUIT = 1.35;       // zoom à partir duquel les fruits se nomment
-  var K_PIP = 2.30;         // zoom à partir duquel les pépins apparaissent
+  var LIMB_T = [0.34, 0.60, 0.86];      // où chaque mois quitte sa branche
+  var LIMB_A = [0.46, -0.34, 0.10];     // et de quel côté il s'écarte
 
-  var months = [], dust = [];
-
-  /* Les branches ne jaillissent pas toutes du même point : elles quittent le
-     tronc à des hauteurs différentes, les basses d'abord, les hautes ensuite.
-     Sans cet étagement, quatre bases de trente unités se superposent au sommet
-     et forment un pâté — c'est ce qui faisait feu d'artifice plutôt qu'arbre. */
-  var FORK = [0.46, 0.86, 0.70, 0.30];      // hauteur de départ, par trimestre
-  function trunkAt(t){
-    // le tronc s'infléchit doucement : une verticale parfaite fait poteau
-    return { x: TRUNK.x + Math.sin(t * 1.7) * 16,
-             y: TRUNK.y + (TRUNK.top - TRUNK.y) * t };
-  }
-  function quarterFoot(q){ return trunkAt(FORK[q]); }
-  function quarterTip(q){
-    var Q = QUARTERS[q], f0 = quarterFoot(q);
-    return { x: f0.x + Q.d[0] * Q.len, y: f0.y + Q.d[1] * Q.len };
-  }
-  function quarterCtrl(q){
-    var Q = QUARTERS[q], t = quarterTip(q), f0 = quarterFoot(q);
-    // elle part d'abord dans l'axe du tronc, puis s'ouvre : c'est le geste d'une
-    // branche qui se détache, pas d'un rayon qui part du centre
-    return [{ x:f0.x + Q.d[0] * 30, y:f0.y - 120 },
-            { x:t.x - Q.d[0] * 120, y:t.y - Q.d[1] * 120 }];
-  }
-  function bez3(p0, c1, c2, p3, t){
+  /* Une courbe = trois points. On l'échantillonne pour tracer et pour placer. */
+  function quad(p0, c, p1, t){
     var u = 1 - t;
-    return {
-      x: u*u*u*p0.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*p3.x,
-      y: u*u*u*p0.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*p3.y
-    };
+    return { x: u*u*p0.x + 2*u*t*c.x + t*t*p1.x,
+             y: u*u*p0.y + 2*u*t*c.y + t*t*p1.y };
   }
-  function quarterAt(q, t){
-    var c = quarterCtrl(q);
-    return bez3(quarterFoot(q), c[0], c[1], quarterTip(q), t);
-  }
-  function quarterAngle(q, t){
-    var a = quarterAt(q, Math.max(0, t - 0.04)), b = quarterAt(q, Math.min(1, t + 0.04));
+  function angleOf(f, t){
+    var a = f(Math.max(0, t - 0.03)), b = f(Math.min(1, t + 0.03));
     return Math.atan2(b.y - a.y, b.x - a.x);
   }
-  /* Un rameau de mois fourche le long de sa branche, pas à son extrémité : le
-     premier mois part bas et loin, le deuxième plus haut de l'autre côté, le
-     troisième prolonge la pointe. C'est la ramification d'un vrai arbre. */
-  var LIMB_T = [0.50, 0.76, 1.0];       // où chaque mois quitte sa branche
-  var LIMB_A = [-0.62, 0.58, 0.06];     // et de quel côté il s'écarte
-  function limbOf(q, k){
-    var t0 = LIMB_T[k];
-    var from = quarterAt(q, t0);
-    var base = quarterAngle(q, t0);
-    // un peu d'irrégularité : trois rameaux rigoureusement identiques font décor
-    var jitter = (rnd(q * 7 + k * 3 + 1) - 0.5) * 0.22;
-    var ang = base + LIMB_A[k] + jitter;
-    var len = LIMB * (1.12 - k * 0.09) * (0.9 + rnd(q * 5 + k) * 0.22);
-    var to = { x: from.x + Math.cos(ang) * len, y: from.y + Math.sin(ang) * len };
-    // la courbure : le rameau sort dans l'axe de la branche avant de s'ouvrir
-    var ctrl = { x: from.x + Math.cos((base + ang) / 2) * len * 0.5,
-                 y: from.y + Math.sin((base + ang) / 2) * len * 0.5 };
-    return { from: from, ctrl: ctrl, to: to, ang: ang };
+
+  function trunkAt(t){                       // le tronc, du sol à la fourche
+    return { x: AXE, y: SOL - (SOL - FOURCHE) * t };
   }
-  function limbAt(l, t){
-    var u = 1 - t;
-    return { x: u*u*l.from.x + 2*u*t*l.ctrl.x + t*t*l.to.x,
-             y: u*u*l.from.y + 2*u*t*l.ctrl.y + t*t*l.to.y };
+  function quarterOf(q){
+    var Q = QUARTERS[q];
+    var p0 = trunkAt(0.30 + Q.depart * 0.70);
+    var p1 = { x: p0.x + Math.cos(Q.angle) * Q.len,
+               y: p0.y + Math.sin(Q.angle) * Q.len };
+    // le point de contrôle décalé donne le galbe : la branche part dans l'axe
+    // du tronc puis s'ouvre, au lieu de filer droit
+    var mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+    var c = { x: mid.x - Math.sin(Q.angle) * Q.len * Q.courbe,
+              y: mid.y + Math.cos(Q.angle) * Q.len * Q.courbe - Q.len * 0.16 };
+    return { p0: p0, c: c, p1: p1, at: function(t){ return quad(p0, c, p1, t); } };
+  }
+  function limbOf(q, k){
+    var Q = QUARTERS[q], br = quarterOf(q);
+    var t0 = LIMB_T[k];
+    var p0 = br.at(t0);
+    var base = angleOf(br.at, t0);
+    var ang = base + LIMB_A[k] * Q.cote + (rnd(q * 5 + k) - 0.5) * 0.16;
+    var len = (250 - k * 26) * (0.9 + rnd(q * 9 + k * 3) * 0.24);
+    var p1 = { x: p0.x + Math.cos(ang) * len, y: p0.y + Math.sin(ang) * len };
+    var mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+    var c = { x: mid.x - Math.sin(ang) * len * 0.18 * Q.cote,
+              y: mid.y + Math.cos(ang) * len * 0.18 * Q.cote };
+    return { p0: p0, c: c, p1: p1, ang: ang,
+             at: function(t){ return quad(p0, c, p1, t); } };
   }
 
-  var cam = { x:800, y:578, k:1.0, tx:800, ty:578, tk:1.0 };
-  var KMIN = 0.72, KMAX = 4.2, GLIDE = 0.09, ZOOMV = 0.08;
-  var lastPt = null, grab = null, pinch = null, pointers = {}, dragged = false;
+  var cam = { x:800, y:520, k:1.0, tx:800, ty:520, tk:1.0 };
+  var KMIN = 0.7, KMAX = 4.0, GLIDE = 0.09, ZOOMV = 0.08;
+  var lastPt = null;
+  var months = [];
 
   function rnd(seed){ var x = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
   function wpx(v){ return v * S * cam.k; }
   function dpx(v){ return v * S * 1.35 * Math.pow(cam.k, 0.5); }
   function X(x){ return (x - cam.x) * S * cam.k + W / 2; }
   function Y(y){ return (y - cam.y) * S * cam.k + H / 2; }
-  function BX(x){ return (x - cam.x) * S * cam.k * 0.45 + W / 2; }
-  function BY(y){ return (y - cam.y) * S * cam.k * 0.45 + H / 2; }
 
-  for(var d = 0; d < 110; d++){
-    dust.push({ x: 800 + (rnd(d * 3 + 1) - 0.5) * 2600, y: 560 + (rnd(d * 7 + 2) - 0.5) * 2000,
-                a: 0.05 + rnd(d * 11 + 5) * 0.14, r: 0.5 + rnd(d * 13) * 1.2 });
-  }
+  var K_LEAF = 1.25;      // les feuilles se nomment à partir de ce zoom
+  var K_PIP  = 2.20;      // les actualités apparaissent à partir de celui-là
 
-  /* Construction de l'arbre entier : mois → fruits (catégories présentes) →
-     pépins (les entrées). Un mois sans entrée garde son rameau, nu. */
   function build(){
     var was = {};
     months.forEach(function(m){ was[m.i] = m.glow; });
@@ -576,52 +670,50 @@
       var q = (i / 3) | 0, k = i % 3;
       var limb = limbOf(q, k);
       var list = byMonth(i);
-
-      // regroupement par catégorie, dans l'ordre de CATS pour que la couronne
-      // ne change pas de disposition d'un mois à l'autre
       var bucket = {};
       list.forEach(function(e){ (bucket[catOf(e)] = bucket[catOf(e)] || []).push(e); });
       var present = CATS.filter(function(c){ return bucket[c.id]; });
 
-      var fruits = present.map(function(c, fi){
+      /* Les feuilles se répartissent le long du rameau, alternées de part et
+         d'autre — comme sur la référence, où elles ne poussent jamais toutes
+         du même côté ni au même endroit. */
+      var feuilles = present.map(function(c, fi){
         var n = present.length;
-        // couronne ouverte dans l'axe du rameau : les fruits ne reviennent pas
-        // sur la branche dont ils pendent
-        var spread = n === 1 ? 0 : (fi / (n - 1) - 0.5) * Math.min(2.4, 0.7 * n);
-        var ang = limb.ang + spread;
-        var reach = FRUIT_R * (n === 1 ? 0.35 : 1);
+        var t = 0.46 + (n === 1 ? 0.24 : (fi / (n - 1)) * 0.46);
+        var base = limb.at(t);
+        var ang = angleOf(limb.at, t);
+        var cote = (fi % 2 === 0) ? 1 : -1;
+        var ouvert = ang + cote * 1.02;                 // le pétiole s'écarte
         var entries = bucket[c.id].slice().sort(function(a, b){
-          return a.date < b.date ? 1 : -1;
-        });
+          return a.date < b.date ? 1 : -1; });
+        var taille = 52 + Math.min(entries.length, 12) * 3.4;
         return {
-          cat: c, month: i, key: i + ":" + c.id,
-          x: limb.to.x + Math.cos(ang) * reach,
-          y: limb.to.y + Math.sin(ang) * reach,
-          r: 13 + Math.min(entries.length, 12) * 1.15,
-          entries: entries, glow: 0,
-          pips: entries.slice(0, 10).map(function(e, pi, arr){
-            var a2 = (pi / Math.max(1, arr.length)) * 6.2832 + i * 0.7;
-            var rr = arr.length === 1 ? 0 : 0.55;
-            return { id: e.id, day: parseInt(e.date.slice(8, 10), 10),
-                     dx: Math.cos(a2) * rr, dy: Math.sin(a2) * rr };
+          cat: c, month: i, key: i + ":" + c.id, t: t, ang: ouvert, cote: cote,
+          base: base,
+          x: base.x + Math.cos(ouvert) * taille * 0.9,
+          y: base.y + Math.sin(ouvert) * taille * 0.9,
+          r: taille, entries: entries, glow: 0,
+          pips: entries.slice(0, 8).map(function(e, pi, arr){
+            return { id: e.id, u: (pi + 1) / (arr.length + 1) };
           })
         };
       });
-
-      months.push({ i:i, q:q, k:k, limb:limb, n:list.length, fruits:fruits,
-                    x:limb.to.x, y:limb.to.y, glow: was[i] || 0 });
+      months.push({ i:i, q:q, k:k, limb:limb, n:list.length, feuilles:feuilles,
+                    x:limb.p1.x, y:limb.p1.y, glow: was[i] || 0 });
     }
     if(!motion) draw();
   }
-
-  function allFruits(){
+  function allLeaves(){
     var out = [];
-    months.forEach(function(m){ m.fruits.forEach(function(f){ out.push(f); }); });
+    months.forEach(function(m){ m.feuilles.forEach(function(f){ out.push(f); }); });
     return out;
   }
 
   function step(){
-    if(lastPt && !grab && !pinch && !(panel && panel.classList.contains("on")))
+    glisseVue();
+    if(state.focus !== null && !cardEl.hidden) placeCard();
+    placePlus();
+    if(lastPt && !(panel && panel.classList.contains("on")))
       look(lastPt.x, lastPt.y);
     cam.x += (cam.tx - cam.x) * GLIDE;
     cam.y += (cam.ty - cam.y) * GLIDE;
@@ -629,7 +721,7 @@
     months.forEach(function(m){
       var want = (state.focus === m.i) ? 1 : (state.hoverMonth === m.i ? 0.55 : 0);
       m.glow += (want - m.glow) * 0.14;
-      m.fruits.forEach(function(f){
+      m.feuilles.forEach(function(f){
         var w2 = (state.fruit === f.key) ? 1 : (state.hover === f.key ? 0.6 : 0);
         f.glow += (w2 - f.glow) * 0.16;
       });
@@ -640,12 +732,12 @@
 
   function clampK(k){ return Math.max(KMIN, Math.min(KMAX, k)); }
   function clampCam(){
-    var lt = Math.max(0, 520 - 430 / cam.tk);
+    var lt = Math.max(0, 560 - 460 / cam.tk);
     cam.tx = Math.max(800 - lt, Math.min(800 + lt, cam.tx));
-    cam.ty = Math.max(560 - lt * 0.75, Math.min(560 + lt * 0.75, cam.ty));
-    var lc = Math.max(0, 520 - 430 / cam.k);
+    cam.ty = Math.max(520 - lt * 0.8, Math.min(520 + lt * 0.8, cam.ty));
+    var lc = Math.max(0, 560 - 460 / cam.k);
     cam.x = Math.max(800 - lc, Math.min(800 + lc, cam.x));
-    cam.y = Math.max(560 - lc * 0.75, Math.min(560 + lc * 0.75, cam.y));
+    cam.y = Math.max(520 - lc * 0.8, Math.min(520 + lc * 0.8, cam.y));
   }
   function zoomAt(cx, cy, factor){
     var before = toWorld(cx, cy);
@@ -657,18 +749,24 @@
     clampCam(); placeCard();
     if(!motion){ settle(); draw(); }
   }
+  /* Le cadrage tient compte de la colonne de veille : au-delà de 1000 px elle
+     mange 356 px à droite, l'arbre doit donc se centrer dans ce qui reste,
+     sinon il se retrouve poussé dans l'angle. */
+  function cadre(){
+    var occupe = (W > 1000) ? 356 : 0;
+    var k = Math.min(1.0, (H - 40) / (1020 * S));
+    return { x: 800 + (occupe / 2) / (S * k), y: 566, k: k };
+  }
   function recentre(){
-    cam.tx = 800; cam.ty = 578; cam.tk = 1.0;
+    var c = cadre();
+    cam.tx = c.x; cam.ty = c.y; cam.tk = c.k;
     if(!motion){ settle(); draw(); }
   }
-  /* Aller voir un fruit de près : c'est le geste qui fait passer de la
-     silhouette aux actualités. */
   function zoomTo(f){
-    cam.tx = f.x; cam.ty = f.y; cam.tk = Math.max(cam.tk, K_PIP + 0.25);
+    cam.tx = f.x; cam.ty = f.y; cam.tk = Math.max(cam.tk, K_PIP + 0.3);
     clampCam();
     if(!motion){ settle(); draw(); }
   }
-
   function resize(){
     var r = cv.getBoundingClientRect();
     if(!r.width) return;
@@ -677,10 +775,13 @@
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     S = Math.min(W, H) / 1000;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    placeCard();
+    if(!vu){ vu = true; poseVue(); }
+    else if(state.focus === null || !moisOuvert()) poseVue();
+    else viseMois(state.focus);
+    placeCard(); placePlus();
     if(!motion) draw();
   }
-
+  var vu = false;           // premier cadrage, une fois la taille connue
   var thumbs = {};
   function thumbFor(id){
     var e = entryById(id);
@@ -697,310 +798,414 @@
     var n = parseInt(hex.slice(1), 16);
     return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
   }
-  /* Assombrir une teinte sans virer au gris : on multiplie, on ne mélange pas
-     avec du noir. C'est la différence entre un fruit dans l'ombre et un fruit sale. */
-  function shade(hex, f){
-    var n = parseInt(hex.slice(1), 16);
-    return "rgb(" + Math.round((n >> 16) * f) + "," +
-                    Math.round(((n >> 8) & 255) * f) + "," +
-                    Math.round((n & 255) * f) + ")";
-  }
-  function roundRect(x, y, w, h, r){
+  function fade(k, from, to){ return Math.max(0, Math.min(1, (k - from) / (to - from))); }
+
+  /* Le bois. Deux principes tirés de la référence :
+     — la branche s'affine jusqu'à la pointe d'aiguille, pas jusqu'à un moignon ;
+     — elle est éclairée DE BIAIS : un bord clair, un bord sombre. C'est ce
+       dégradé en travers, et lui seul, qui donne le volume cylindrique. */
+  function rameau(f, w0, w1, steps){
+    var L = [], R = [], i, t, p, a, b, dx, dy, len, nx, ny, w;
+    for(i = 0; i <= steps; i++){
+      t = i / steps;
+      p = f(t);
+      a = f(Math.max(0, t - 0.02)); b = f(Math.min(1, t + 0.02));
+      dx = b.x - a.x; dy = b.y - a.y;
+      len = Math.hypot(dx, dy) || 1;
+      nx = -dy / len; ny = dx / len;
+      // (1-t)^0.62 : épais longtemps, puis effilé net — la pointe d'aiguille
+      w = (w1 + (w0 - w1) * Math.pow(1 - t, 0.62)) / 2;
+      L.push({ x: p.x + nx * w, y: p.y + ny * w });
+      R.push({ x: p.x - nx * w, y: p.y - ny * w });
+    }
     ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
+    ctx.moveTo(X(L[0].x), Y(L[0].y));
+    for(i = 1; i < L.length; i++) ctx.lineTo(X(L[i].x), Y(L[i].y));
+    for(i = R.length - 1; i >= 0; i--) ctx.lineTo(X(R[i].x), Y(R[i].y));
     ctx.closePath();
+    return { L: L, R: R };
   }
-  /* Opacité progressive : un étage ne surgit pas, il se révèle entre deux zooms. */
-  function fade(k, from, to){
-    return Math.max(0, Math.min(1, (k - from) / (to - from)));
+  /* Le dégradé en travers : son axe est la normale au milieu de la branche. */
+  function bois(bords, alpha){
+    var m = Math.floor(bords.L.length / 2);
+    var g = ctx.createLinearGradient(X(bords.L[m].x), Y(bords.L[m].y),
+                                     X(bords.R[m].x), Y(bords.R[m].y));
+    g.addColorStop(0,    hexa(BOIS.clair, alpha));
+    g.addColorStop(0.34, hexa(BOIS.moyen, alpha));
+    g.addColorStop(0.75, hexa(BOIS.coeur, alpha));
+    g.addColorStop(1,    hexa(BOIS.sombre, alpha));
+    return g;
   }
+  function traceBois(f, w0, w1, steps, alpha){
+    var b = rameau(f, w0, w1, steps);
+    ctx.fillStyle = bois(b, alpha === undefined ? 1 : alpha);
+    ctx.fill();
+  }
+
+  /* La feuille : ovale à pointe, nervure centrale, posée sur son pétiole. */
+  function feuille(f, showName, fnt){
+    var bx = X(f.base.x), by = Y(f.base.y);
+    var lx = X(f.x), ly = Y(f.y);
+    var r = dpx(f.r) * (1 + f.glow * 0.09);
+    var ang = Math.atan2(ly - by, lx - bx);
+
+    ctx.strokeStyle = hexa(BOIS.moyen, 0.85);      // le pétiole
+    ctx.lineWidth = Math.max(1, dpx(1.5));
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(lx, ly); ctx.stroke();
+
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(ang);
+    var L = r, l = r * 0.42;
+    var g = ctx.createLinearGradient(0, -l, 0, l);
+    g.addColorStop(0, hexa(f.cat.soft, 0.95));
+    g.addColorStop(1, hexa(f.cat.hue, 0.92));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(L * 0.42, -l, L, 0);      // le dessus
+    ctx.quadraticCurveTo(L * 0.42, l, 0, 0);       // le dessous
+    ctx.closePath();
+    ctx.fill();
+    if(state.fruit === f.key || f.glow > 0.5){
+      ctx.strokeStyle = "rgba(248,244,236," + (0.35 + f.glow * 0.55).toFixed(2) + ")";
+      ctx.lineWidth = Math.max(1, dpx(1.3));
+      ctx.stroke();
+    }
+    ctx.strokeStyle = hexa(f.cat.soft, 0.5);       // la nervure
+    ctx.lineWidth = Math.max(0.6, dpx(0.8));
+    ctx.beginPath(); ctx.moveTo(L * 0.06, 0); ctx.lineTo(L * 0.9, 0); ctx.stroke();
+    ctx.restore();
+
+    if(showName > 0.02){
+      ctx.font = '600 ' + (fnt * 0.62).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.letterSpacing = "0.14em";
+      ctx.fillStyle = hexa(f.cat.soft, 0.9 * showName);
+      ctx.fillText(f.cat.name.toUpperCase() + "  " + f.entries.length,
+                   lx + Math.cos(ang) * r * 0.55, ly + Math.abs(Math.sin(ang)) * 4 + dpx(11));
+      ctx.letterSpacing = "0px";
+    }
+  }
+
+  /* L'arbre n'est plus dessiné : c'est l'image de fond. Le canevas ne porte
+     plus que ce qui doit réagir — étiquettes, feuilles de catégories,
+     actualités — posé par-dessus. */
+  var DESSINE_BOIS = false;
 
   function draw(){
     if(!W) return;
     ctx.clearRect(0, 0, W, H);
-    // plein écran : le plafond de 19 px rendait les étiquettes minuscules
     var f = Math.max(11, Math.min(26, W * 0.0135));
-    var i, m, Q, q;
-    var showFruit = fade(cam.k, K_FRUIT - 0.35, K_FRUIT + 0.15);
-    var showPip = fade(cam.k, K_PIP - 0.5, K_PIP + 0.2);
+    var i, m, q;
+    var vueFeuille = fade(cam.k, K_LEAF - 0.35, K_LEAF + 0.15);
+    var vuePepin = fade(cam.k, K_PIP - 0.5, K_PIP + 0.2);
+    if(!DESSINE_BOIS) return dessineParDessus(f, vueFeuille, vuePepin);
 
-    for(i = 0; i < dust.length; i++){
-      var g = dust[i];
-      ctx.fillStyle = "rgba(200,220,245," + (g.a * 0.7).toFixed(3) + ")";
-      ctx.beginPath(); ctx.arc(BX(g.x), BY(g.y), g.r * Math.max(0.6, S * 1.2), 0, 6.2832); ctx.fill();
-    }
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
-
-    /* --- le bois : des fuseaux, pas des traits ---
-       Une branche d'épaisseur constante fait un schéma ; une branche qui s'affine
-       vers sa pointe fait un arbre. On échantillonne la courbe, on décale de part
-       et d'autre de la normale d'une largeur qui décroît, et on remplit. */
-    function taper(sample, w0, w1, steps){
-      var L = [], R = [], i, t, p, a, b, dx, dy, len, nx, ny, w;
-      for(i = 0; i <= steps; i++){
-        t = i / steps;
-        p = sample(t);
-        a = sample(Math.max(0, t - 0.02)); b = sample(Math.min(1, t + 0.02));
-        dx = b.x - a.x; dy = b.y - a.y;
-        len = Math.hypot(dx, dy) || 1;
-        nx = -dy / len; ny = dx / len;
-        w = (w0 + (w1 - w0) * Math.pow(t, 0.7)) / 2;
-        L.push({ x: p.x + nx * w, y: p.y + ny * w });
-        R.push({ x: p.x - nx * w, y: p.y - ny * w });
-      }
-      ctx.beginPath();
-      ctx.moveTo(X(L[0].x), Y(L[0].y));
-      for(i = 1; i < L.length; i++) ctx.lineTo(X(L[i].x), Y(L[i].y));
-      for(i = R.length - 1; i >= 0; i--) ctx.lineTo(X(R[i].x), Y(R[i].y));
-      ctx.closePath();
-    }
-    function woodFill(p0, p1, hue, soft, alpha){
-      var g = ctx.createLinearGradient(X(p0.x), Y(p0.y), X(p1.x), Y(p1.y));
-      g.addColorStop(0, hexa("#2a3648", alpha));
-      g.addColorStop(0.45, hexa(hue, alpha * 0.85));
-      g.addColorStop(1, hexa(soft, alpha));
-      return g;
+    /* --- la coupe : deux arcs qui s'ouvrent, comme sur la référence --- */
+    for(var s = -1; s <= 1; s += 2){
+      (function(cote){
+        /* La coupe : chaque arc part du tronc vers le haut, s'incurve vers
+           l'extérieur puis redescend en cercle jusqu'au sol. Les deux ensemble
+           dessinent le calice ouvert de la référence. */
+        traceBois(function(t){
+          var a = -Math.PI * 0.62 + t * Math.PI * 1.16;   // du haut vers le bas
+          var R = 168;
+          return { x: AXE + cote * (R * Math.sin(a) + R * 0.62),
+                   y: SOL - 150 - R * Math.cos(a) * 0.98 };
+        }, 30, 2.5, 30);
+      })(s);
     }
 
-    /* --- le tronc, évasé au pied comme une souche --- */
-    var trunkPath = trunkAt;
-    // trois racines qui mordent le sol
-    for(var ri = -1; ri <= 1; ri++){
-      if(!ri) continue;
-      (function(dir){
-        taper(function(t){
-          return { x: TRUNK.x + dir * t * 78, y: TRUNK.y + t * t * 30 };
-        }, 26, 3, 14);
-      })(ri);
-      ctx.fillStyle = hexa("#33415a", 0.75); ctx.fill();
+    /* --- le tronc, en deux brins accolés --- */
+    for(var b = -1; b <= 1; b += 2){
+      (function(cote){
+        traceBois(function(t){
+          var p = trunkAt(t);
+          return { x: p.x + cote * (9 - t * 4), y: p.y };
+        }, 44, 17, 22);
+      })(b);
     }
-    taper(trunkPath, 54, 30, 26);
-    ctx.fillStyle = woodFill({ x:TRUNK.x, y:TRUNK.y }, { x:TRUNK.x, y:TRUNK.top },
-                             "#4a6180", "#8fb2d6", 0.95);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(12,18,26,.5)"; ctx.lineWidth = 1; ctx.stroke();
 
-    /* --- les quatre branches maîtresses --- */
+    /* --- les quatre branches --- */
     for(q = 0; q < 4; q++){
-      Q = QUARTERS[q];
-      var lit = months[q*3].n + months[q*3+1].n + months[q*3+2].n > 0;
-      var tip = quarterTip(q);
-      taper(function(t){ return quarterAt(q, t); }, 30, 13, 30);
-      ctx.fillStyle = woodFill(quarterFoot(q), tip, Q.hue, Q.soft, lit ? 0.92 : 0.34);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(12,18,26,.45)"; ctx.lineWidth = 1; ctx.stroke();
+      var br = quarterOf(q);
+      var vivant = months[q*3].n + months[q*3+1].n + months[q*3+2].n > 0;
+      traceBois(br.at, vivant ? 27 : 20, 1.2, 34, vivant ? 1 : 0.82);
 
-      var lp = quarterAt(q, 0.46);
-      var la = Math.atan2(quarterAt(q, 0.52).y - quarterAt(q, 0.40).y,
-                          quarterAt(q, 0.52).x - quarterAt(q, 0.40).x);
+      var lp = br.at(0.42), la = angleOf(br.at, 0.42);
       ctx.save();
       ctx.translate(X(lp.x), Y(lp.y));
       ctx.rotate(Math.abs(la) > Math.PI / 2 ? la + Math.PI : la);
-      ctx.font = '700 ' + (f * 0.80).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+      ctx.font = '600 ' + (f * 0.66).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
       ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-      ctx.letterSpacing = "0.16em";
-      ctx.shadowColor = "rgba(8,12,18,.9)"; ctx.shadowBlur = 6;
-      ctx.fillStyle = hexa(Q.soft, lit ? 0.98 : 0.5);
-      ctx.fillText(Q.tag, 0, -dpx(15));
-      ctx.shadowBlur = 0;
+      ctx.letterSpacing = "0.2em";
+      ctx.fillStyle = "rgba(226,214,198," + (vivant ? 0.7 : 0.35) + ")";
+      ctx.fillText(QUARTERS[q].tag, 0, -dpx(13));
       ctx.letterSpacing = "0px";
       ctx.restore();
     }
 
-    /* --- les rameaux des mois --- */
+    /* --- les douze rameaux --- */
     for(i = 0; i < 12; i++){
-      m = months[i]; Q = QUARTERS[m.q];
-      var l = m.limb;
-      (function(limb){
-        taper(function(t){ return limbAt(limb, t); }, 13, m.n ? 6 : 3.5, 20);
-      })(l);
-      ctx.fillStyle = woodFill(l.from, l.to, Q.hue, Q.soft,
-                               (m.n ? 0.9 : 0.3) + m.glow * 0.1);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(12,18,26,.4)"; ctx.lineWidth = 1; ctx.stroke();
+      m = months[i];
+      traceBois(m.limb.at, m.n ? 14 : 9, 0.8, 24, m.n ? 1 : 0.78);
 
-      var mp = limbAt(l, 0.52);
-      var ma = Math.atan2(limbAt(l, 0.6).y - limbAt(l, 0.44).y,
-                          limbAt(l, 0.6).x - limbAt(l, 0.44).x);
+      var mp = m.limb.at(0.995), ma = angleOf(m.limb.at, 0.9);
       ctx.save();
       ctx.translate(X(mp.x), Y(mp.y));
       ctx.rotate(Math.abs(ma) > Math.PI / 2 ? ma + Math.PI : ma);
-      ctx.font = '700 ' + (f * 0.74).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
-      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-      ctx.letterSpacing = "0.18em";
-      ctx.shadowColor = "rgba(8,12,18,.9)"; ctx.shadowBlur = 6;
-      ctx.fillStyle = m.n ? "rgba(232,240,250," + (0.72 + m.glow * 0.28).toFixed(2) + ")"
-                          : "rgba(150,163,182,.55)";
-      ctx.fillText(SHORT[i].toUpperCase() + (m.n ? "  " + m.n : ""), 0, -dpx(13));
-      ctx.shadowBlur = 0;
+      ctx.font = '600 ' + (f * 0.6).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.letterSpacing = "0.2em";
+      ctx.fillStyle = m.n ? "rgba(240,232,220," + (0.62 + m.glow * 0.38).toFixed(2) + ")"
+                          : "rgba(180,172,162,.34)";
+      ctx.fillText(SHORT[i].toUpperCase() + (m.n ? "  " + m.n : ""), dpx(16), -dpx(5));
       ctx.letterSpacing = "0px";
       ctx.restore();
     }
 
-    /* --- les fruits : une catégorie du SI, un fruit --- */
+    /* --- les feuilles, et les actualités le long du pétiole --- */
     for(i = 0; i < 12; i++){
       m = months[i];
-      for(var fi = 0; fi < m.fruits.length; fi++){
-        var fr = m.fruits[fi];
-        var fx = X(fr.x), fy = Y(fr.y);
-        var rr = dpx(fr.r) * (1 + fr.glow * 0.1);
-        var picked = state.fruit === fr.key;
-
-        // le pédoncule, du bout du rameau au fruit
-        ctx.strokeStyle = hexa(fr.cat.hue, 0.3 + fr.glow * 0.3);
-        ctx.lineWidth = dpx(1.6);
-        ctx.beginPath(); ctx.moveTo(X(m.x), Y(m.y)); ctx.lineTo(fx, fy); ctx.stroke();
-
-        // un fruit a du volume : ombre portée, chair dégradée, reflet, feuille
-        ctx.save();
-        ctx.shadowColor = "rgba(6,10,16,.75)";
-        ctx.shadowBlur = 14 * Math.max(0.7, S); ctx.shadowOffsetY = dpx(3);
-        ctx.fillStyle = hexa(fr.cat.hue, 0.9);
-        ctx.beginPath(); ctx.arc(fx, fy, rr, 0, 6.2832); ctx.fill();
-        ctx.restore();
-
-        ctx.shadowColor = fr.cat.hue;
-        ctx.shadowBlur = (8 + fr.glow * 26) * Math.max(0.7, S * 1.3);
-        var gf = ctx.createRadialGradient(fx - rr * 0.36, fy - rr * 0.42, rr * 0.08,
-                                          fx + rr * 0.1, fy + rr * 0.18, rr * 1.15);
-        // la chair s'assombrit vers le bord dans SA propre teinte : un dégradé
-        // qui finit sur du presque-noir donnait des fruits sales
-        gf.addColorStop(0, hexa(fr.cat.soft, 1));
-        gf.addColorStop(0.5, hexa(fr.cat.hue, 1));
-        gf.addColorStop(1, shade(fr.cat.hue, 0.45));
-        ctx.fillStyle = gf;
-        ctx.beginPath(); ctx.arc(fx, fy, rr, 0, 6.2832); ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // le reflet : c'est lui qui donne la rondeur
-        var sp = ctx.createRadialGradient(fx - rr * 0.34, fy - rr * 0.4, 0,
-                                          fx - rr * 0.34, fy - rr * 0.4, rr * 0.55);
-        sp.addColorStop(0, "rgba(255,255,255,.55)");
-        sp.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = sp;
-        ctx.beginPath(); ctx.arc(fx - rr * 0.3, fy - rr * 0.36, rr * 0.55, 0, 6.2832); ctx.fill();
-
-        ctx.strokeStyle = hexa(fr.cat.soft, 0.35 + fr.glow * 0.5);
-        ctx.lineWidth = dpx(1.4);
-        ctx.beginPath(); ctx.arc(fx, fy, rr, 0, 6.2832); ctx.stroke();
-
-        // une feuille au point d'attache, côté rameau
-        var la2 = Math.atan2(Y(m.y) - fy, X(m.x) - fx);
-        ctx.save();
-        ctx.translate(fx + Math.cos(la2) * rr * 0.92, fy + Math.sin(la2) * rr * 0.92);
-        ctx.rotate(la2 + 0.5);
-        ctx.fillStyle = hexa(fr.cat.soft, 0.55);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, rr * 0.42, rr * 0.17, 0, 0, 6.2832);
-        ctx.fill();
-        ctx.restore();
-        if(picked){
-          ctx.strokeStyle = "rgba(240,248,255,.92)"; ctx.lineWidth = dpx(2.2);
-          ctx.beginPath(); ctx.arc(fx, fy, rr + dpx(6), 0, 6.2832); ctx.stroke();
-        }
-
-        /* --- les pépins : les actualités, dans le fruit --- */
-        if(showPip > 0.02){
-          for(var pi = 0; pi < fr.pips.length; pi++){
-            var p = fr.pips[pi];
-            var px = fx + p.dx * rr, py = fy + p.dy * rr;
-            var hotPip = state.pip === p.id;
-            ctx.fillStyle = "rgba(22,28,38," + (0.85 * showPip).toFixed(2) + ")";
-            ctx.beginPath(); ctx.arc(px, py, dpx(hotPip ? 4.6 : 3.4), 0, 6.2832); ctx.fill();
-            ctx.strokeStyle = "rgba(255,255,255," + ((hotPip ? 0.95 : 0.6) * showPip).toFixed(2) + ")";
-            ctx.lineWidth = dpx(1.1);
-            ctx.beginPath(); ctx.arc(px, py, dpx(hotPip ? 4.6 : 3.4), 0, 6.2832); ctx.stroke();
-          }
-          if(fr.entries.length > fr.pips.length){
-            ctx.font = '600 ' + (f * 0.62).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillStyle = "rgba(255,255,255," + (0.7 * showPip).toFixed(2) + ")";
-            ctx.fillText("+" + (fr.entries.length - fr.pips.length), fx, fy + rr + dpx(9));
+      for(var fi = 0; fi < m.feuilles.length; fi++){
+        var fe = m.feuilles[fi];
+        if(vuePepin > 0.02){
+          for(var pi = 0; pi < fe.pips.length; pi++){
+            var p = fe.pips[pi];
+            var px = X(fe.base.x + (fe.x - fe.base.x) * p.u * 0.85);
+            var py = Y(fe.base.y + (fe.y - fe.base.y) * p.u * 0.85);
+            var chaud = state.pip === p.id;
+            ctx.fillStyle = chaud ? "rgba(248,244,236," + vuePepin.toFixed(2) + ")"
+                                  : hexa(fe.cat.soft, 0.85 * vuePepin);
+            ctx.beginPath();
+            ctx.arc(px, py, dpx(chaud ? 4.2 : 2.9), 0, 6.2832);
+            ctx.fill();
           }
         }
-
-        // l'étiquette de catégorie n'apparaît qu'en approchant
-        if(showFruit > 0.02){
-          ctx.font = '700 ' + (f * 0.62).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
-          ctx.textAlign = "center"; ctx.textBaseline = "top";
-          ctx.letterSpacing = "0.1em";
-          ctx.fillStyle = hexa(fr.cat.soft, 0.9 * showFruit);
-          ctx.fillText(fr.cat.name.toUpperCase() + "  " + fr.entries.length,
-                       fx, fy + rr + dpx(5));
-          ctx.letterSpacing = "0px";
-        }
+        feuille(fe, vueFeuille, f);
       }
     }
 
-    /* --- le cliché du pépin survolé, par-dessus tout le reste --- */
-    if(state.pip && showPip > 0.5){
-      var host = null, hp = null;
-      var fl = allFruits();
-      for(var hi = 0; hi < fl.length && !hp; hi++)
-        for(var hj = 0; hj < fl[hi].pips.length; hj++)
-          if(fl[hi].pips[hj].id === state.pip){ host = fl[hi]; hp = fl[hi].pips[hj]; break; }
+    /* --- le sujet, au pied --- */
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.font = '700 ' + (f * 1.12).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    ctx.letterSpacing = "0.26em";
+    ctx.fillStyle = "rgba(240,232,220,.95)";
+    ctx.fillText("LES SYSTÈMES D'INFOS", X(AXE), Y(SOL) + wpx(26));
+    var tot = state.entries.length;
+    ctx.font = '400 ' + (f * 0.72).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    ctx.letterSpacing = "0.2em";
+    ctx.fillStyle = "rgba(196,182,164,.7)";
+    ctx.fillText(state.loading ? "CHARGEMENT"
+      : state.year + "   ·   " + (tot ? tot + (tot > 1 ? " ACTUALITÉS" : " ACTUALITÉ")
+                                      : "AUCUNE ACTUALITÉ"),
+      X(AXE), Y(SOL) + wpx(26) + f * 1.8);
+    ctx.letterSpacing = "0px";
+
+    /* --- le cliché de l'actualité survolée --- */
+    if(state.pip && vuePepin > 0.5){
+      var hote = null, hp = null, ls = allLeaves();
+      for(var hi = 0; hi < ls.length && !hp; hi++)
+        for(var hj = 0; hj < ls[hi].pips.length; hj++)
+          if(ls[hi].pips[hj].id === state.pip){ hote = ls[hi]; hp = ls[hi].pips[hj]; break; }
       var im = hp ? thumbFor(state.pip) : null;
       if(im){
-        var rr2 = dpx(host.r);
-        var px2 = X(host.x) + hp.dx * rr2, py2 = Y(host.y) + hp.dy * rr2;
-        var bw = Math.max(66, Math.min(128, W * 0.13));
+        var px2 = X(hote.base.x + (hote.x - hote.base.x) * hp.u * 0.85);
+        var py2 = Y(hote.base.y + (hote.y - hote.base.y) * hp.u * 0.85);
+        var bw = Math.max(70, Math.min(132, W * 0.13));
         var bh = Math.min(bw * 1.35, Math.max(bw * 0.6,
                    bw * (im.naturalHeight / im.naturalWidth || 1)));
-        var gap2 = dpx(9) + 9;
-        var bx = px2 - bw / 2, by = py2 - gap2 - bh, below = false;
-        if(by < 8){ by = py2 + gap2; below = true; }
-        bx = Math.max(8, Math.min(W - bw - 8, bx));
-        ctx.strokeStyle = "rgba(130,165,205,.35)"; ctx.lineWidth = 1;
+        var gap = dpx(9) + 10;
+        var bx2 = px2 - bw / 2, by2 = py2 - gap - bh, dessous = false;
+        if(by2 < 8){ by2 = py2 + gap; dessous = true; }
+        bx2 = Math.max(8, Math.min(W - bw - 8, bx2));
+        ctx.strokeStyle = hexa(BOIS.moyen, 0.5); ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(px2, py2 + (below ? gap2 * 0.35 : -gap2 * 0.35));
-        ctx.lineTo(px2, below ? by : by + bh);
+        ctx.moveTo(px2, py2 + (dessous ? gap * 0.4 : -gap * 0.4));
+        ctx.lineTo(px2, dessous ? by2 : by2 + bh);
         ctx.stroke();
         ctx.save();
-        ctx.shadowColor = "rgba(2,3,8,.85)"; ctx.shadowBlur = 22; ctx.shadowOffsetY = 5;
-        ctx.fillStyle = "#141b25";
-        ctx.fillRect(bx, by, bw, bh);
+        ctx.shadowColor = "rgba(4,10,20,.85)"; ctx.shadowBlur = 24; ctx.shadowOffsetY = 6;
+        ctx.fillStyle = "#132840";
+        ctx.fillRect(bx2, by2, bw, bh);
         ctx.restore();
         var sc = Math.max(bw / im.naturalWidth, bh / im.naturalHeight);
         var dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
         ctx.save();
-        ctx.beginPath(); ctx.rect(bx, by, bw, bh); ctx.clip();
-        ctx.drawImage(im, bx + (bw - dw) / 2, by + (bh - dh) / 2, dw, dh);
+        ctx.beginPath(); ctx.rect(bx2, by2, bw, bh); ctx.clip();
+        ctx.drawImage(im, bx2 + (bw - dw) / 2, by2 + (bh - dh) / 2, dw, dh);
         ctx.restore();
-        ctx.strokeStyle = "rgba(130,165,205,.5)"; ctx.lineWidth = 1;
-        ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+        ctx.strokeStyle = hexa(BOIS.clair, 0.55); ctx.lineWidth = 1;
+        ctx.strokeRect(bx2 + 0.5, by2 + 0.5, bw - 1, bh - 1);
       }
     }
 
-    /* --- le sujet, au pied du tronc --- */
-    ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.font = '700 ' + (f * 1.15).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
-    ctx.letterSpacing = "0.2em";
-    ctx.fillStyle = "rgba(232,240,250,.96)";
-    ctx.fillText("LES SYSTÈMES D'INFOS", X(TRUNK.x), Y(TRUNK.y) + wpx(16));
-    var tot = state.entries.length;
-    ctx.font = '400 ' + (f * 0.76).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
-    ctx.letterSpacing = "0.14em";
-    ctx.fillStyle = "rgba(150,170,196,.9)";
-    ctx.fillText(state.loading ? "CHARGEMENT"
-      : state.year + "  ·  " + (tot ? tot + (tot > 1 ? " ACTUALITÉS" : " ACTUALITÉ") : "AUCUNE ACTUALITÉ"),
-      X(TRUNK.x), Y(TRUNK.y) + wpx(16) + f * 1.7);
-    ctx.letterSpacing = "0px";
-
-    // rappel du geste tant qu'on n'a pas assez zoomé pour voir les pépins
-    if(showPip < 0.05 && state.fruit === null){
-      ctx.font = '400 ' + (f * 0.68).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    if(vuePepin < 0.05 && state.fruit === null){
+      ctx.font = '400 ' + (f * 0.62).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
       ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-      ctx.letterSpacing = "0.12em";
-      ctx.fillStyle = "rgba(150,170,196,.55)";
-      ctx.fillText(showFruit < 0.5 ? "MOLETTE POUR APPROCHER LES FRUITS"
-                                   : "APPROCHEZ ENCORE POUR VOIR LES PÉPINS",
-                   W / 2, H - 14);
+      ctx.letterSpacing = "0.18em";
+      ctx.fillStyle = "rgba(196,182,164,.4)";
+      ctx.fillText(vueFeuille < 0.5 ? "MOLETTE POUR APPROCHER LES FEUILLES"
+                                    : "APPROCHEZ ENCORE POUR VOIR LES ACTUALITÉS",
+                   W / 2, H - 16);
       ctx.letterSpacing = "0px";
     }
+  }
+  /* --------- les douze bouts de branches ---------
+     Coordonnées dans fond.png, relevées au pixel : on isole le cuivre, on
+     parcourt le bois depuis le pied en comptant les pas, et les extrémités sont
+     les maxima locaux de cette distance.
+     L'attribution des mois suit la capture annotée : on remonte le côté gauche
+     depuis le bas, on traverse la cime, on redescend le côté droit. Trois
+     pointes que ma règle d'écartement avait écartées à tort ont été rétablies
+     (mars, juillet, octobre) ; trois branches intérieures ont été retirées.    */
+  var IMG = { w:1672, h:941 };
+  var FEUILLES = [
+    { x: 536, y: 684 },   //  1 janvier   — bas gauche
+    { x: 443, y: 497 },   //  2 février   — gauche
+    { x: 537, y: 443 },   //  3 mars
+    { x: 569, y: 326 },   //  4 avril
+    { x: 639, y: 130 },   //  5 mai       — cime gauche
+    { x: 848, y: 187 },   //  6 juin      — cime centre
+    { x: 838, y: 261 },   //  7 juillet
+    { x: 998, y: 162 },   //  8 août      — cime droite
+    { x:1087, y: 288 },   //  9 septembre
+    { x:1131, y: 445 },   // 10 octobre
+    { x:1211, y: 548 },   // 11 novembre  — droite
+    { x:1140, y: 695 }    // 12 décembre  — bas droite
+  ];
+  /* L'image est posée en « cover » : elle remplit le cadran en débordant du côté
+     le plus étroit. On refait ici le même calcul que le navigateur, sans quoi
+     les repères glisseraient par rapport au dessin. */
+  /* La vue : une échelle et un décalage, qui glissent vers leur cible. Au repos
+     l'image remplit le cadran ; en visant un mois, elle s'approche de sa
+     branche. Comme le canevas dessine l'image ET les repères avec cette même
+     vue, les deux ne peuvent pas se désaccorder. */
+  var Z_BRANCHE = 3.5;                 // grossissement au clic
+  var vue = { s:1, dx:0, dy:0, ts:1, tdx:0, tdy:0 };
+
+  function cover(){                    // le cadrage au repos
+    var s = Math.max(W / IMG.w, H / IMG.h);
+    return { s: s, dx: (W - IMG.w * s) / 2, dy: (H - IMG.h * s) / 2 };
+  }
+  /* La veille ne prend la droite que lorsqu'elle est ouverte : fermée, ou en
+     bandeau bas sous 1000 px, elle ne mange aucune largeur. */
+  function veilleLarge(){
+    var d = document.getElementById("veille-dock");
+    return (d && !d.hidden && W > 1000) ? 372 : 0;
+  }
+  function libreX(){                   // le centre de ce que la veille laisse voir
+    return (W - veilleLarge()) / 2;
+  }
+  function viseMois(i){
+    var base = cover(), s = base.s * Z_BRANCHE, f = FEUILLES[i];
+    vue.ts = s;
+    vue.tdx = libreX() - f.x * s;
+    vue.tdy = H / 2 - f.y * s;
+  }
+  function reposVue(){
+    var b = cover();
+    vue.ts = b.s; vue.tdx = b.dx; vue.tdy = b.dy;
+  }
+  function poseVue(){                  // sans transition : au chargement, au redimensionnement
+    reposVue();
+    vue.s = vue.ts; vue.dx = vue.tdx; vue.dy = vue.tdy;
+  }
+  function glisseVue(){
+    vue.s += (vue.ts - vue.s) * 0.12;
+    vue.dx += (vue.tdx - vue.dx) * 0.12;
+    vue.dy += (vue.tdy - vue.dy) * 0.12;
+  }
+  /* L'image, chargée une fois puis dessinée à chaque image avec le même
+     cadrage que les zones sensibles. */
+  var fond = new Image();
+  var fondPret = false;
+  fond.onload = function(){ fondPret = true; if(!motion) draw(); };
+  fond.src = "fond.png";
+  /* Le repère suit la vue, jamais le cadrage de repos : sans quoi, dès qu'on
+     s'approche d'une branche, les points restent en arrière et ne désignent
+     plus rien. Juin et juillet n'étant séparés que de 75 px sur l'image, le
+     rayon reste sous la moitié de cet écart. */
+  function spot(i){
+    var f = FEUILLES[i];
+    return { x: vue.dx + f.x * vue.s, y: vue.dy + f.y * vue.s,
+             r: Math.max(16, 26 * vue.s) };
+  }
+
+  function dessineParDessus(f, vueFeuille, vuePepin){
+    // l'image et les repères partagent la même vue : ils ne peuvent pas dériver
+    if(fondPret) ctx.drawImage(fond, vue.dx, vue.dy, IMG.w * vue.s, IMG.h * vue.s);
+    /* De près, on ne montre que la branche visée : les onze autres repères
+       flotteraient sur du bleu vide, hors de leur dessin. */
+    var repos = cover().s;
+    var proche = Math.max(0, Math.min(1, (vue.s / repos - 1.25) / 0.9));
+
+    for(var i = 0; i < 12; i++){
+      var s = spot(i), m = months[i], n = m ? m.n : 0;
+      var vif = (state.focus === i) ? 1 : (state.hoverMonth === i ? 0.72 : 0);
+      var vivant = n > 0;
+      /* Tous les cercles s'effacent en s'approchant, y compris celui qu'on
+         vient de cliquer : de près, on regarde la branche, pas le repère.
+         Le bouton « Retour » prend le relais. */
+      var voile = 1 - proche;
+      if(voile < 0.02) continue;
+      ctx.save();
+      ctx.globalAlpha = voile;
+
+      // un halo diffus, qui ne masque pas la feuille dessous
+      if(vif > 0.02 || vivant){
+        var g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 1.5);
+        var a = 0.1 + vif * 0.42 + (vivant ? 0.12 : 0);
+        g.addColorStop(0, "rgba(240,224,196," + a.toFixed(3) + ")");
+        g.addColorStop(1, "rgba(240,224,196,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 1.5, 0, 6.2832); ctx.fill();
+      }
+      // l'anneau : discret au repos, net quand on vise
+      ctx.strokeStyle = "rgba(240,224,196," + (0.18 + vif * 0.7).toFixed(3) + ")";
+      ctx.lineWidth = 1 + vif;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * (0.82 + vif * 0.12), 0, 6.2832); ctx.stroke();
+
+      if(vivant){                       // la pastille du nombre d'entrées
+        ctx.fillStyle = "rgba(201,136,92," + (0.85 + vif * 0.15).toFixed(2) + ")";
+        ctx.beginPath(); ctx.arc(s.x + s.r * 0.72, s.y - s.r * 0.72, s.r * 0.34, 0, 6.2832);
+        ctx.fill();
+        ctx.font = '700 ' + (s.r * 0.42).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = "#14243c";
+        ctx.fillText(String(n), s.x + s.r * 0.72, s.y - s.r * 0.7);
+      }
+      // le nom ne s'affiche qu'au survol : douze étiquettes en permanence
+      // encombreraient le dessin qu'on cherche justement à laisser voir
+      if(vif > 0.3){
+        ctx.font = '700 ' + (f * 0.66).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+        ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+        ctx.letterSpacing = "0.2em";
+        ctx.shadowColor = "rgba(6,14,26,.95)"; ctx.shadowBlur = 10;
+        ctx.fillStyle = "rgba(244,236,224," + vif.toFixed(2) + ")";
+        ctx.fillText(MONTHS[i].toUpperCase(), s.x, s.y - s.r * 1.25);
+        ctx.shadowBlur = 0;
+        ctx.letterSpacing = "0px";
+      }
+      ctx.restore();
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.font = '700 ' + (f * 1.12).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    ctx.letterSpacing = "0.26em";
+    ctx.shadowColor = "rgba(6,14,26,.9)"; ctx.shadowBlur = 12;
+    ctx.fillStyle = "rgba(240,232,220,.95)";
+    ctx.fillText("LES SYSTÈMES D'INFOS", W / 2, H - f * 4.6);
+    var tot = state.entries.length;
+    ctx.font = '400 ' + (f * 0.72).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
+    ctx.letterSpacing = "0.2em";
+    ctx.fillStyle = "rgba(201,168,133,.85)";
+    ctx.fillText(state.loading ? "CHARGEMENT"
+      : state.year + "   ·   " + (tot ? tot + (tot > 1 ? " ACTUALITÉS" : " ACTUALITÉ")
+                                      : "AUCUNE ACTUALITÉ"),
+      W / 2, H - f * 2.6);
+    ctx.shadowBlur = 0;
+    ctx.letterSpacing = "0px";
   }
 
   function frame(){ step(); draw(); requestAnimationFrame(frame); }
@@ -1014,37 +1219,58 @@
       y: (clientY - r.top - r.height / 2) / (S * cam.k) + cam.y
     };
   }
-  /* Deux sortes de cibles, et l'une n'existe qu'une fois assez près : un pépin
-     ne se clique pas quand il n'est pas visible. */
+  /* Une feuille se vise sur son corps ; une actualité seulement quand elle est
+     visible, le long du pétiole. À défaut, le bout du rameau cadre le mois. */
+  /* Viser sur l'image : tout se joue en coordonnées d'écran, puisque le dessin
+     y est posé au pixel. Pas de caméra, pas de conversion — la cible est là où
+     on la voit. */
+  function pickSurFond(clientX, clientY){
+    var r = cv.getBoundingClientRect();
+    if(!r.width) return null;
+    var x = clientX - r.left, y = clientY - r.top;
+    var best = null, bd = 1e9;
+    for(var i = 0; i < 12; i++){
+      var s = spot(i);
+      var d = Math.hypot(x - s.x, y - s.y);
+      if(d < s.r * 1.25 && d < bd){ bd = d; best = { kind:"month", month: months[i] }; }
+    }
+    return best;
+  }
+
   function pick(clientX, clientY){
+    if(!DESSINE_BOIS) return pickSurFond(clientX, clientY);
     var w = toWorld(clientX, clientY);
     if(!w) return null;
-    var pipVisible = cam.k >= K_PIP - 0.3;
+    var pepinsVisibles = cam.k >= K_PIP - 0.3;
     var best = null, bd = 1e9;
-    var fruits = allFruits();
-    for(var i = 0; i < fruits.length; i++){
-      var fr = fruits[i];
-      var d = Math.hypot(w.x - fr.x, w.y - fr.y);
-      if(pipVisible){
-        for(var p = 0; p < fr.pips.length; p++){
-          var pp = fr.pips[p];
-          var dp = Math.hypot(w.x - (fr.x + pp.dx * fr.r), w.y - (fr.y + pp.dy * fr.r));
-          if(dp < fr.r * 0.42 + 6 && dp < bd){ bd = dp; best = { kind:"pip", fruit:fr, id:pp.id }; }
+    var ls = allLeaves();
+    for(var i = 0; i < ls.length; i++){
+      var fe = ls[i];
+      if(pepinsVisibles){
+        for(var p = 0; p < fe.pips.length; p++){
+          var pp = fe.pips[p];
+          var qx = fe.base.x + (fe.x - fe.base.x) * pp.u * 0.85;
+          var qy = fe.base.y + (fe.y - fe.base.y) * pp.u * 0.85;
+          var dp = Math.hypot(w.x - qx, w.y - qy);
+          if(dp < 14 && dp < bd){ bd = dp; best = { kind:"pip", fruit:fe, id:pp.id }; }
         }
       }
-      if(d < fr.r + 10 && d < bd){ bd = d; best = { kind:"fruit", fruit:fr }; }
+      // la feuille est un ovale : on vise son milieu avec une tolérance large
+      var mx = fe.x + Math.cos(Math.atan2(fe.y - fe.base.y, fe.x - fe.base.x)) * fe.r * 0.45;
+      var my = fe.y + Math.sin(Math.atan2(fe.y - fe.base.y, fe.x - fe.base.x)) * fe.r * 0.45;
+      var d = Math.hypot(w.x - mx, w.y - my);
+      if(d < fe.r * 0.7 && d < bd){ bd = d; best = { kind:"fruit", fruit:fe }; }
     }
     if(best) return best;
-    // à défaut, le rameau du mois : cliquer une branche cadre le mois entier
     for(var j = 0; j < 12; j++){
       var m = months[j];
-      if(Math.hypot(w.x - m.x, w.y - m.y) < 44) return { kind:"month", month:m };
+      if(Math.hypot(w.x - m.x, w.y - m.y) < 46) return { kind:"month", month:m };
     }
     return null;
   }
   function look(cx, cy){
     var t = pick(cx, cy);
-    var key = t && t.kind === "fruit" ? t.fruit.key : (t && t.kind === "pip" ? t.fruit.key : null);
+    var key = t && (t.kind === "fruit" || t.kind === "pip") ? t.fruit.key : null;
     var pip = t && t.kind === "pip" ? t.id : null;
     var mo = t ? (t.kind === "month" ? t.month.i : t.fruit.month) : null;
     if(key !== state.hover || pip !== state.pip || mo !== state.hoverMonth){
@@ -1054,80 +1280,36 @@
     return t;
   }
 
-  /* --------- les gestes --------- */
-  function fingers(){ var n = 0; for(var k in pointers) n++; return n; }
-  function twoOf(){ var a = []; for(var k in pointers) a.push(pointers[k]); return a; }
 
+  /* --------- les gestes --------- */
+  /* L'image est fixe, cadrée toute seule : rien à tirer, rien à pincer. Le
+     pointeur ne fait plus que désigner, et le canevas n'a donc aucun état de
+     geste à tenir — pas de doigts à compter, donc pas de comptabilité qui
+     survive à un relâchement hors du canevas et avale les clics suivants. */
   cv.addEventListener("pointerdown", function(ev){
-    pointers[ev.pointerId] = { x:ev.clientX, y:ev.clientY };
-    if(fingers() === 2){
-      var t = twoOf();
-      pinch = { d:Math.hypot(t[0].x - t[1].x, t[0].y - t[1].y) || 1 };
-      grab = null; dragged = true;
-      return;
-    }
-    if(fingers() > 2) return;
-    grab = { id:ev.pointerId, x:ev.clientX, y:ev.clientY, moved:0 };
-    dragged = false;
-    try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
-    cv.style.cursor = "grabbing";
     look(ev.clientX, ev.clientY);
   });
   cv.addEventListener("pointermove", function(ev){
-    if(pointers[ev.pointerId]){
-      pointers[ev.pointerId].x = ev.clientX; pointers[ev.pointerId].y = ev.clientY;
-    }
     lastPt = { x:ev.clientX, y:ev.clientY };
-    if(pinch && fingers() >= 2){
-      var t = twoOf();
-      var nd = Math.hypot(t[0].x - t[1].x, t[0].y - t[1].y) || 1;
-      zoomAt((t[0].x + t[1].x) / 2, (t[0].y + t[1].y) / 2, nd / pinch.d);
-      pinch.d = nd;
-      return;
-    }
-    if(grab && grab.id === ev.pointerId){
-      var dx = ev.clientX - grab.x, dy = ev.clientY - grab.y;
-      grab.moved += Math.abs(dx) + Math.abs(dy);
-      if(grab.moved > 5) dragged = true;
-      var z = S * cam.k;
-      cam.x = cam.tx = cam.x - dx / z;
-      cam.y = cam.ty = cam.y - dy / z;
-      clampCam(); placeCard();
-      grab.x = ev.clientX; grab.y = ev.clientY;
-      if(!motion) draw();
-      return;
-    }
-    cv.style.cursor = look(ev.clientX, ev.clientY) ? "pointer" : "grab";
+    cv.style.cursor = look(ev.clientX, ev.clientY) ? "pointer" : "default";
   });
-  function letGo(ev){
-    delete pointers[ev.pointerId];
-    if(fingers() < 2) pinch = null;
-    if(grab && grab.id === ev.pointerId){
-      try{ cv.releasePointerCapture(ev.pointerId); }catch(e){}
-      grab = null; cv.style.cursor = "grab";
-    }
-  }
-  cv.addEventListener("pointerup", letGo);
-  cv.addEventListener("pointercancel", letGo);
-  cv.addEventListener("pointerleave", function(ev){
-    if(grab) return;
-    delete pointers[ev.pointerId]; pinch = null;
+  cv.addEventListener("pointerleave", function(){
     lastPt = null; state.hover = null; state.pip = null; state.hoverMonth = null;
   });
   cv.addEventListener("wheel", function(ev){
+    if(!DESSINE_BOIS) return;          // l image est fixe : rien à zoomer
     ev.preventDefault();
     var dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 380 : 1);
     zoomAt(ev.clientX, ev.clientY, Math.exp(-dy * 0.0016));
   }, { passive:false });
 
   cv.addEventListener("click", function(ev){
-    if(dragged){ dragged = false; return; }
     var t = pick(ev.clientX, ev.clientY);
     if(!t){ closeCard(); return; }
     if(t.kind === "pip"){ openEntry(t.id); return; }
     if(t.kind === "month"){ selectMonth(t.month.i); return; }
     // un fruit trop loin : on s'approche d'abord, on l'ouvre ensuite
-    if(cam.k < K_FRUIT) zoomTo(t.fruit);
+    if(cam.k < K_LEAF) zoomTo(t.fruit);
     selectFruit(t.fruit);
   });
   cv.addEventListener("dblclick", function(){ recentre(); });
@@ -1143,15 +1325,24 @@
 
   /* --------- la fiche --------- */
   var cardEl = document.getElementById("detail");
+  /* Le point d'accroche de la fiche : la pointe de branche du mois retenu, dans
+     le repère de l'écran. (L'ancien calcul passait par le monde de l'arbre
+     dessiné, qui n'existe plus depuis que le fond est une image.) */
   function anchor(){
+    if(state.focus === null) return null;
+    if(!DESSINE_BOIS) return spot(state.focus);
     if(state.fruit){
-      var fr = allFruits().filter(function(f){ return f.key === state.fruit; })[0];
+      var fr = allLeaves().filter(function(f){ return f.key === state.fruit; })[0];
       if(fr) return { x:X(fr.x), y:Y(fr.y), r:dpx(fr.r) };
     }
-    if(state.focus !== null && months[state.focus])
+    if(months[state.focus])
       return { x:X(months[state.focus].x), y:Y(months[state.focus].y), r:dpx(20) };
     return null;
   }
+  /* La fiche se pose vers l'EXTÉRIEUR de l'arbre, dans le vide, jamais au-dessus
+     de la ramure. Posée simplement « à côté » de la pointe cliquée, elle
+     recouvrait les pointes voisines : après avoir ouvert mai, juin et juillet
+     devenaient inatteignables. */
   function placeCard(){
     if(cardEl.hidden) return;
     var a = anchor();
@@ -1159,14 +1350,65 @@
     var pr = cv.getBoundingClientRect(), pl = cardEl.parentNode.getBoundingClientRect();
     var sx = a.x + (pr.left - pl.left), sy = a.y + (pr.top - pl.top);
     var w = cardEl.offsetWidth, h = cardEl.offsetHeight;
-    var left = sx + a.r + 18, top = sy - h / 2;
-    if(left + w > pl.width - 10) left = sx - a.r - 18 - w;
-    cardEl.style.left = Math.max(10, Math.min(pl.width - w - 10, left)) + "px";
+
+    // le pied du tronc, dans le même repère : il donne la direction du dehors
+    var px = vue.dx + 836 * vue.s + (pr.left - pl.left);
+    var py = vue.dy + 802 * vue.s + (pr.top - pl.top);
+    var dx = sx - px, dy = sy - py, d = Math.hypot(dx, dy) || 1;
+    var left = sx + (dx / d) * (a.r + 30) - (dx < 0 ? w : 0);
+    var top  = sy + (dy / d) * (a.r + 20) - h / 2;
+
+    // la colonne de veille occupe la droite quand elle est ouverte : on ne se
+    // glisse pas dessous
+    var limite = pl.width - (veilleLarge() || 10) - w;
+    cardEl.style.left = Math.max(10, Math.min(limite, left)) + "px";
     cardEl.style.top = Math.max(10, Math.min(pl.height - h - 10, top)) + "px";
   }
+  /* --------- le plus --------- */
+  var plusEl = document.getElementById("plus");
+  /* Il se pose au centre de la pointe retenue : le cercle du mois l'entoure,
+     rien ne recouvre les pointes voisines. */
+  function placePlus(){
+    if(!plusEl || plusEl.hidden || state.focus === null) return;
+    var a = anchor();
+    if(!a) return;
+    var pr = cv.getBoundingClientRect(), pl = plusEl.parentNode.getBoundingClientRect();
+    var w = plusEl.offsetWidth, h = plusEl.offsetHeight;
+    var left = a.x + (pr.left - pl.left) - w / 2;
+    var top  = a.y + (pr.top - pl.top) - h / 2;
+    plusEl.style.left = Math.max(6, Math.min(pl.width - w - 6, left)) + "px";
+    plusEl.style.top  = Math.max(6, Math.min(pl.height - h - 6, top)) + "px";
+  }
+  /* Le mois reste « ouvert » tant que son plus est posé : c'est ce qui sépare
+     un cadrage approché d'un retour au repos. */
+  function moisOuvert(){
+    return (plusEl && !plusEl.hidden) || (cardEl && !cardEl.hidden);
+  }
+  function openMonth(i){
+    state.focus = i;
+    plusEl.hidden = false;
+    plusEl.setAttribute("aria-label", "Écrire une entrée de " + MONTHS[i].toLowerCase());
+    plusEl.title = "Écrire";
+    majRetour();
+    renderReadout(); renderArrows(); placePlus();
+    if(!motion) draw();
+  }
+  plusEl.addEventListener("click", function(){ openComposer(state.focus, null); });
+
+  var retourEl = document.getElementById("retour");
+  retourEl.addEventListener("click", function(){ closeCard(); });
+  /* Le bouton n'existe que quand on est approché : au repos il n'aurait rien
+     à ramener. */
+  function majRetour(){
+    retourEl.hidden = DESSINE_BOIS || state.focus === null;
+  }
+
   function closeCard(){
     cardEl.hidden = true;
+    plusEl.hidden = true;
     state.fruit = null; state.focus = null;
+    if(!DESSINE_BOIS) reposVue();               // et on reprend du champ
+    majRetour();
     renderReadout(); renderArrows();
     if(!motion) draw();
   }
@@ -1182,6 +1424,7 @@
       : '<li class="none">Rien dans cette catégorie ce mois-ci.</li>';
     cardEl.hidden = false;
     state.focus = monthIdx;
+    majRetour();
     renderReadout(); renderArrows(); placeCard();
     if(!motion) draw();
   }
@@ -1192,15 +1435,21 @@
                (fr.entries.length > 1 ? " actualités" : " actualité"),
              fr.entries, fr.month);
   }
-  function selectMonth(i){
+  /* discret : on retient le mois sans ouvrir la fiche. Au chargement, une fiche
+     surgie d'elle-même recouvrait la colonne de veille. */
+  function selectMonth(i, discret){
     if(i === null || i === undefined) i = 0;
     i = ((i % 12) + 12) % 12;
     state.fruit = null;
-    var m = months[i], all = byMonth(i);
-    var repartition = m.fruits.map(function(f){
-      return f.cat.name + " " + f.entries.length; }).join(" · ");
-    fillCard(MONTHS[i].toUpperCase(),
-             all.length ? repartition : "aucune actualité", all, i);
+    if(!discret && !DESSINE_BOIS) viseMois(i);   // on va voir la branche de près
+    if(discret){
+      state.focus = i;
+      retourEl.hidden = true;        // rien à ramener : on n'a pas bougé
+      renderReadout(); renderArrows();
+      if(!motion) draw();
+      return;
+    }
+    openMonth(i);
   }
   function stepMonth(d){ selectMonth((state.focus === null ? 0 : state.focus) + d); }
 
@@ -1539,7 +1788,9 @@
     if(ev.key !== "Escape") return;
     var lp = document.getElementById("loupe");
     if(lp.classList.contains("on")){ lp.classList.remove("on"); return; }
-    if(panel.classList.contains("on")) closePanel();
+    if(panel.classList.contains("on")){ closePanel(); return; }
+    // sinon Échap ramène l'arbre entier, même si le canevas n'a pas le focus
+    if(state.focus !== null && !DESSINE_BOIS) closeCard();
   });
 
   pbody.addEventListener("click", function(ev){
@@ -1590,6 +1841,14 @@
   });
 
   document.getElementById("loupe").addEventListener("click", function(){ this.classList.remove("on"); });
+
+  /* La colonne de veille s'ouvre et se ferme à la cloche : la place qu'elle
+     prend à droite change, l'arbre approché doit se recentrer dans ce qui
+     reste. Au repos il tient tout l'écran, rien à reprendre. */
+  window.addEventListener("veille:dock", function(){
+    if(state.focus !== null && moisOuvert()){ viseMois(state.focus); placeCard(); placePlus(); }
+    if(!motion){ settle(); draw(); }
+  });
 
   /* La cloche de veille est sur cette page : quand on verse une actualité au
      journal, inutile d'ouvrir un onglet — la fiche s'ouvre ici même. */
@@ -1659,10 +1918,7 @@
     if(an && an !== state.year) state.year = an;
   }
   loadYear().then(function(){
-    if(!hasStore && !hasLocal)
-      setNote("Stockage indisponible : les entrées ne seront pas conservées.", true);
-    else if(!hasStore)
-      setNote("Entrées conservées dans ce navigateur.");
+    noteStockage();
     if(venu) openComposer(monthOf(venu), venu);
   });
 })();

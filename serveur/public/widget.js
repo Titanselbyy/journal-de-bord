@@ -12,8 +12,9 @@
   var API = (script && script.dataset.api) || "/api";
   var MOUNT = (script && script.dataset.mount) || "#veille";
   /* data-dock : au lieu d'un menu déroulant sous la cloche, le panneau se pose
-     dans un conteneur à soi et reste ouvert. La cloche garde son compteur et
-     sert d'interrupteur. C'est ce que fait le journal, où veille et arbre
+     dans un conteneur à soi, en colonne. Fermé au départ comme le menu, il
+     s'ouvre et se referme à la cloche : la page hôte reste dégagée tant qu'on
+     ne réclame pas la veille. C'est ce que fait le journal, où veille et arbre
      doivent tenir côte à côte. */
   var DOCK = (script && script.dataset.dock) || "";
   var POLL_MS = Number(script && script.dataset.poll) || 60000;
@@ -263,9 +264,19 @@
   function toggle(force){
     state.open = force === undefined ? !state.open : force;
     el.panel.hidden = !state.open;
+    /* Le conteneur d'accueil se ferme avec le panneau : son cadre à lui — la
+       largeur réservée, l'ombre portée — resterait sinon posé sur la page,
+       vide. */
+    if(el.dock) el.dock.hidden = !state.open;
     el.bell.setAttribute("aria-expanded", String(state.open));
     // amarré, le panneau fait partie de la page : il ne vole pas le curseur
     if(state.open){ load(); if(!state.docked) el.refresh.focus(); }
+    /* La page hôte peut avoir à se réorganiser : le journal recadre son arbre
+       selon que la colonne occupe ou non la droite. */
+    try{
+      window.dispatchEvent(new CustomEvent("veille:dock",
+        { detail: { open: state.open, docked: state.docked } }));
+    }catch(e){}
   }
 
   /* ---------------- construction ---------------- */
@@ -297,10 +308,13 @@
     wrap.appendChild(el.bell);
 
     var dockHost = DOCK ? document.querySelector(DOCK) : null;
+    el.dock = dockHost;
     el.panel = document.createElement("div");
     el.panel.className = "vl-panel" + (dockHost ? " vl-docked" : "");
-    el.panel.hidden = !dockHost;          // amarré : ouvert d'emblée
-    state.open = state.docked = !!dockHost;
+    el.panel.hidden = true;               // fermé au départ, amarré ou non
+    state.open = false;
+    state.docked = !!dockHost;
+    if(dockHost) dockHost.hidden = true;
     el.panel.setAttribute("role", "dialog");
     el.panel.setAttribute("aria-label", "Veille Systèmes d'information");
 
@@ -432,7 +446,8 @@
     style(); build();
     api("/state").then(function(d){
       state.unread = d.unread; paintBadge(); paintFoot();
-      if(state.open) load();               // amarré : la liste s'affiche d'emblée
+      // la liste attend l'ouverture ; seul le compteur part tout de suite
+      if(state.open) load();
     }).catch(function(){ paintFoot("Service injoignable"); });
     live();
   }

@@ -51,3 +51,13 @@ services:
         generateValue: true       # pour déclencher la collecte de l'extérieur
       - key: ALLOWED_ORIGINS
         value: ""
+
+      # Le journal : vos textes vivent dans une base durable, séparée de la
+      # veille (qui, elle, se recollecte seule). Sans ces deux variables, ils
+      # iraient dans un fichier local — éphémère sur Render.
+      # Créez une base gratuite sur https://turso.tech, puis renseignez-les
+      # dans le tableau de bord Render (elles ne sont pas dans le dépôt).
+      - key: JOURNAL_DB_URL
+        sync: false
+      - key: JOURNAL_DB_TOKEN
+        sync: false

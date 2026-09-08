@@ -6,6 +6,7 @@ const express = require("express");
 const path = require("path");
 const D = require("./lib/db.js");
 const collector = require("./lib/collector.js");
+const entries = require("./lib/entries.js");
 const DEFAULT_SOURCES = require("./lib/sources.js");
 
 const PORT = Number(process.env.PORT) || 4310;
@@ -29,7 +30,14 @@ function currentUser(req){
 
 const app = express();
 app.disable("x-powered-by");
-app.use(express.json({ limit: "64kb" }));
+/* Le corps des requêtes : petit partout, généreux pour le journal — une photo
+   pèse quelques centaines de kilo-octets. Le limiteur global s'appliquait avant
+   celui de la route et rejetait les photos avec une erreur opaque. */
+const corpsBref = express.json({ limit: "64kb" });
+app.use((req, res, next) => {
+  if(req.path.indexOf("/api/journal") === 0) return next();   // sa route s'en charge
+  corpsBref(req, res, next);
+});
 
 // Le widget peut être servi depuis un autre domaine que l'API.
 app.use((req, res, next) => {
@@ -88,7 +96,8 @@ app.get("/api/state", (req, res) => {
     sources: D.sources.list().length,
     lastRun: last ? { at: last.ended_at || last.started_at, added: last.added,
                       errors: last.errors, trigger: last.trigger } : null,
-    busy: collector.busy()
+    busy: collector.busy(),
+    journal: { distant: entries.distant }
   });
 });
 
@@ -153,6 +162,39 @@ app.post("/api/refresh", async (req, res) => {
   }
 });
 
+/* ---------------- le journal ----------------
+   Une clé, une valeur : le journal range déjà ses années et ses photos ainsi.
+   Le corps est plus généreux qu'ailleurs — une photo pèse quelques centaines de
+   kilo-octets, là où le reste de l'API échange des broutilles. */
+const gros = express.json({ limit: "8mb" });
+
+app.get("/api/journal", async (req, res) => {
+  try{ res.json({ cles: await entries.list(currentUser(req).id) }); }
+  catch(e){ res.status(503).json({ error: String(e.message).slice(0, 200) }); }
+});
+
+app.get("/api/journal/:cle", async (req, res) => {
+  try{
+    const v = await entries.get(currentUser(req).id, req.params.cle);
+    if(v === null) return res.status(404).json({ error: "clé inconnue" });
+    res.json({ value: v });
+  }catch(e){ res.status(503).json({ error: String(e.message).slice(0, 200) }); }
+});
+
+app.put("/api/journal/:cle", gros, async (req, res) => {
+  const v = req.body && req.body.value;
+  if(typeof v !== "string") return res.status(400).json({ error: "value attendue" });
+  try{
+    await entries.set(currentUser(req).id, req.params.cle, v);
+    res.json({ ok: true, octets: v.length });
+  }catch(e){ res.status(503).json({ error: String(e.message).slice(0, 200) }); }
+});
+
+app.delete("/api/journal/:cle", async (req, res) => {
+  try{ res.json({ ok: true, supprime: await entries.del(currentUser(req).id, req.params.cle) }); }
+  catch(e){ res.status(503).json({ error: String(e.message).slice(0, 200) }); }
+});
+
 /* ---------------- sources ---------------- */
 app.get("/api/sources", (req, res) => {
   res.json(D.sources.list().map(s => ({
@@ -187,6 +229,11 @@ app.use(express.static(path.join(__dirname, "public"), {
    express.static le sert à la racine sans qu'on ait à l'écrire. /journal reste
    valable, c'est l'adresse qu'ont retenue les premiers liens. */
 app.use((err, req, res, next) => {
+  // un corps trop gros n'est pas une panne : on le dit, avec la limite
+  if(err && err.type === "entity.too.large")
+    return res.status(413).json({ error: "contenu trop volumineux", limite: err.limit });
+  if(err && err.type === "entity.parse.failed")
+    return res.status(400).json({ error: "JSON invalide" });
   console.error("[veille]", err);
   res.status(500).json({ error: "erreur interne" });
 });
