@@ -56,6 +56,55 @@ function stripTags(s){
   return t.replace(/\s+/g, " ").trim();
 }
 
+/* Le résumé tel que le flux le livre est rarement présentable : les moteurs de
+   blog collent leur signature en fin de texte (« The post … appeared first on
+   … »), les rédactions marquent leur troncature (« […] », « Lire la suite »),
+   et la coupe brutale à N caractères laisse une phrase en l'air. On rend donc un
+   texte qui se termine où une phrase se termine.                                */
+const SIGNATURES = new RegExp([
+  String.raw`\s*The post\b[\s\S]*?appeared first on[\s\S]*$`,
+  String.raw`\s*(?:Cet|L.)\s*article\b[\s\S]*?est apparu en premier sur[\s\S]*$`,
+  String.raw`\s*(?:Lire la suite|En savoir plus|Read more|Continue reading|The post)\s*[….]*\s*$`,
+  String.raw`\s*<\/?p>\s*$`
+].join("|"), "i");
+
+/* Coupe à la dernière phrase complète tenant dans la limite. Si aucune ponctuation
+   forte n'apparaît assez tôt, on se rabat sur le dernier mot entier + « … » :
+   mieux vaut une ellipse assumée qu'un mot tranché en deux. */
+/* Les marques de troncature du flux (« […] », « [...] ») n'appartiennent pas au
+   texte : elles disent seulement que la rédaction a coupé. On les retire partout,
+   et pas seulement en fin de chaîne — un blanc ou un point les suit souvent. */
+const TRONCATURE = /\s*\[\s*(?:…|\.\.\.)\s*\]\s*/g;
+
+function cleanSummary(texte, limite){
+  // La rédaction avait-elle déjà coupé ? Si oui, la phrase finale est en l'air
+  // et mérite une finition. Sinon le texte est complet : on n'y touche pas.
+  // La question se pose AVANT tout nettoyage, sinon la marque a déjà disparu.
+  const dejaCoupe = TRONCATURE.test(String(texte || ""));
+  TRONCATURE.lastIndex = 0;                      // le drapeau /g garde un curseur
+  const brut = String(texte || "").replace(SIGNATURES, "");
+  let t = brut.replace(TRONCATURE, " ").replace(/\s+/g, " ").trim();
+  if(!t) return null;
+  if(t.length <= limite) return dejaCoupe ? finir(t) : t;
+
+  const tete = t.slice(0, limite);
+  const fin = Math.max(tete.lastIndexOf(". "), tete.lastIndexOf("! "),
+                       tete.lastIndexOf("? "), tete.lastIndexOf(" : "));
+  if(fin >= limite * 0.4) return tete.slice(0, fin + 1).replace(SIGNATURES, "").trim();
+  const mot = tete.lastIndexOf(" ");
+  return finir((mot > 0 ? tete.slice(0, mot) : tete).trim());
+}
+
+/* Un résumé qui s'arrête sur « devrait passer de » n'est pas un résumé. Quand la
+   dernière phrase est manifestement inachevée, on préfère reculer jusqu'à la
+   précédente ; s'il n'y en a pas, on assume l'ellipse plutôt que le vide. */
+function finir(t){
+  if(/[.!?…»)]$/.test(t)) return t;
+  const fin = Math.max(t.lastIndexOf(". "), t.lastIndexOf("! "), t.lastIndexOf("? "));
+  if(fin >= t.length * 0.5) return t.slice(0, fin + 1).trim();
+  return t.replace(/[\s,;:–-]+$/, "") + "…";
+}
+
 /* Décodage d'après le charset annoncé. On lit d'abord l'en-tête HTTP, puis la
    déclaration XML des premiers octets — l'un des deux ment souvent, jamais les deux. */
 function decodeBody(buf, contentType){
@@ -166,8 +215,8 @@ function parseFeed(xml){
       const title = stripTags(tagText(b, "title"));
       if(!url || !title) continue;                       // sans titre ni lien, inexploitable
       const guid = unescapeXml(tagText(b, "guid", "id")) || urlKey(url);
-      const summary = stripTags(
-        tagText(b, "description", "summary", "encoded", "content")).slice(0, 600);
+      const summary = cleanSummary(
+        stripTags(tagText(b, "description", "summary", "encoded", "content")), 600);
       items.push({
         guid, url: url.trim(), url_key: urlKey(url), title: title.slice(0, 400),
         summary: summary || null,
@@ -180,4 +229,4 @@ function parseFeed(xml){
   return { title: feedTitle, lang: feedLang, items };
 }
 
-module.exports = { parseFeed, decodeBody, urlKey, stripTags, unescapeXml, toIso };
+module.exports = { parseFeed, decodeBody, urlKey, stripTags, unescapeXml, toIso, cleanSummary };

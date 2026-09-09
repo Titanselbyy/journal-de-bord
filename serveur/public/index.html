@@ -23,36 +23,42 @@
     color-scheme:dark;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--ink);overflow-x:hidden}
+  /* La page ne fait jamais qu'un écran : l'arbre est le sujet, et il n'y a
+     rien dessous à aller chercher. Donc aucune barre de défilement. */
+  html,body{margin:0;padding:0;background:var(--ink);height:100%;overflow:hidden}
   body{
-    min-height:100vh;color:var(--star);font-family:var(--prose);font-weight:300;
+    color:var(--star);font-family:var(--prose);font-weight:300;
     -webkit-font-smoothing:antialiased;
     background:
       radial-gradient(72% 62% at 50% 44%,#1e3552 0%,#14273f 46%,var(--ink) 100%);
   }
   button{font-family:inherit;color:inherit;cursor:pointer;background:none;border:none;padding:0}
   :focus-visible{outline:1px solid var(--web2);outline-offset:5px}
-  .shell{max-width:1200px;margin:0 auto;padding:0 18px 44px}
+  /* Une colonne haute d'un écran : le bandeau prend ce qu'il lui faut,
+     l'arbre occupe tout le reste au pixel près. */
+  .shell{max-width:1200px;margin:0 auto;padding:0 18px;
+    height:100%;display:flex;flex-direction:column}
 
   /* ---------- bandeau ---------- */
   /* Le bandeau suit l'arbre : pleine largeur, calé dans les coins. Enfermé dans
      la colonne de texte, il flottait au milieu d'un écran occupé de bord à bord. */
-  .masthead{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  .masthead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:14px;
     width:100vw;margin-left:calc(50% - 50vw);padding:13px 26px;
     border-bottom:1px solid var(--web);background:rgba(11,23,38,.6)}
   .wordmark{font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.34em;
     text-transform:uppercase;color:var(--star);text-indent:.34em}
   .yearnav{display:flex;align-items:center;gap:18px}
-  .yearnav #veille{display:inline-flex;margin-left:4px}
-  .yearnav button{font-family:var(--display);font-weight:500;font-size:11px;letter-spacing:.18em;
-    color:var(--faint);transition:color .2s}
+  .yearnav #veille{display:inline-flex}
+  .yearnav .note{max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* seule la cloche de veille occupe encore ce coin : elle prend la teinte du bandeau */
+  .yearnav button{color:var(--faint);transition:color .2s}
   .yearnav button:hover{color:var(--star)}
 
   /* ---------- carte ---------- */
   /* l'arbre occupe l'écran : le cadre étroit bridait la lecture */
   .plate{position:relative;width:100vw;margin-left:calc(50% - 50vw);
-    height:calc(100vh - 58px);height:calc(100dvh - 58px);
-    overflow:hidden;border-bottom:1px solid rgba(130,165,205,.18);
+    flex:1 1 auto;min-height:0;
+    overflow:hidden;
     /* L'image n'est plus posée en fond CSS : c'est le canevas qui la dessine.
        Sinon le navigateur et le code calculent chacun leur cadrage, et les
        zones sensibles glissent de quelques dizaines de pixels par rapport au
@@ -157,39 +163,10 @@
   .sr-only button{border:1px solid var(--web);color:var(--mute);font-family:var(--display);
     font-size:10px;letter-spacing:.16em;padding:6px 10px}
 
-  /* ---------- lecture ---------- */
-  .readout{min-height:210px;max-width:860px;margin:0 auto;
-    border-top:1px solid var(--web);padding-top:14px}
-  .footline{max-width:860px;margin-left:auto;margin-right:auto}
-  .idle{color:var(--faint);font-family:var(--display);font-size:10px;letter-spacing:.3em;
-    text-transform:uppercase;padding:34px 0;text-align:center}
-  .rhead{display:flex;align-items:flex-end;gap:16px;margin-bottom:6px}
-  .rtitle{flex:1;min-width:0}
-  .rmonth{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.11em;
-    text-transform:uppercase;line-height:1.1}
-  .rsub{font-family:var(--prose);font-style:italic;font-size:14px;color:var(--mute);margin-top:3px}
   .act{font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.22em;
     text-transform:uppercase;color:var(--mute);padding:6px 0;white-space:nowrap;
     border-bottom:1px solid transparent;transition:.2s}
   .act:hover{color:var(--star);border-bottom-color:var(--star)}
-  .act.lead{color:var(--star);border-bottom-color:var(--web2)}
-
-  .rnav{display:flex;gap:22px;align-items:center;justify-content:space-between;
-    padding:9px 0 0;margin-top:8px;border-top:1px solid rgba(150,160,205,.08)}
-  .rlist{list-style:none;margin:8px 0 0;padding:0}
-  .rlist li{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:baseline;
-    padding:10px 0;border-top:1px solid rgba(150,160,205,.08);cursor:pointer}
-  .rlist li:first-child{border-top:none}
-  .rlist .day{font-family:var(--display);font-weight:500;font-size:10.5px;letter-spacing:.1em;
-    color:var(--faint);text-transform:uppercase;transition:color .18s}
-  .rlist .ttl{font-size:17px;line-height:1.4;color:#CFC9BE;overflow:hidden;
-    text-overflow:ellipsis;white-space:nowrap;transition:color .18s}
-  .rlist li:hover .ttl{color:var(--star)}
-  .rlist li:hover .day{color:var(--mute)}
-  .rmore{font-family:var(--display);font-size:10px;letter-spacing:.2em;color:var(--faint);
-    text-transform:uppercase;padding-top:12px}
-  .rnone{font-style:italic;font-size:16px;color:var(--mute);padding:18px 0}
-
   .peek{padding:14px 0 2px;cursor:pointer}
   .peek .stamp{font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.24em;
     text-transform:uppercase;color:var(--faint)}
@@ -200,12 +177,6 @@
   .tag{font-family:var(--display);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--mute);border-bottom:1px solid var(--web)}
   .tag.mood{color:var(--star);border-bottom-color:var(--web2)}
-  .fade{animation:fu .3s ease-out both}
-  @keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-  @media (prefers-reduced-motion:reduce){.fade{animation:none}}
-
-  .footline{display:flex;justify-content:space-between;align-items:center;
-    margin-top:22px;padding-top:14px;border-top:1px solid var(--web)}
   .note{font-family:var(--display);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
     color:var(--faint)}
   .note.warn{color:var(--rose);letter-spacing:.1em;text-transform:none;font-size:12px;
@@ -295,8 +266,8 @@
   <header class="masthead">
     <span class="wordmark">Journal de bord</span>
     <nav class="yearnav">
-      <button id="prevY"></button>
-      <button id="nextY"></button>
+      <span class="note" id="note"></span>
+      <button class="act" id="exportBtn">Exporter</button>
       <span id="veille"></span>
     </nav>
   </header>
@@ -315,20 +286,12 @@
       <ol id="detailList"></ol>
       <div class="dact">
         <button id="detailWrite" type="button">Écrire</button>
-        <button id="detailAll" type="button">Voir toutes les entrées</button>
       </div>
     </aside>
     <canvas id="chart" tabindex="0" role="application"
       aria-label="Carte du mois. Chaque point est une entrée, le cercle marqué d'un plus ouvre l'écriture. Flèches pour parcourir les entrées, Entrée pour ouvrir, Maj plus flèches pour changer de mois, Échap pour recentrer."></canvas>
   </div>
   <nav class="sr-only" id="srnav" aria-label="Mois"></nav>
-
-  <div class="readout" id="readout" aria-live="polite"></div>
-
-  <div class="footline">
-    <span class="note" id="note"></span>
-    <button class="act" id="exportBtn">Exporter</button>
-  </div>
 </div>
 
 <div class="veil" id="veil"></div>
@@ -354,7 +317,7 @@
                 "juil","août","sept","oct","nov","déc"];
   var LANGS  = ["français","anglais","espagnol","portugais","arabe","allemand",
                 "italien","russe","chinois","japonais"];
-  var PREVIEW = 6, INDEX_LIMIT = 4300000;
+  var INDEX_LIMIT = 4300000;
   var motion = !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   /* ---------------- stockage ---------------- */
@@ -513,10 +476,7 @@
     });
   }
   function labelOf(e){ return e.title || (e.body || "").split("\n")[0] || "sans titre"; }
-  function dayStamp(e){ return pad(parseInt(e.date.slice(8,10),10)) + " " + SHORT[monthOf(e)]; }
 
-  // À l'ouverture d'une année : le mois courant si c'est l'année courante, sinon
-  // le dernier mois qui a quelque chose à montrer. Jamais une page vide.
   function firstMonth(){
     if(state.year === today.getFullYear()) return today.getMonth();
     for(var i = 11; i >= 0; i--) if(byMonth(i).length) return i;
@@ -524,9 +484,7 @@
   }
   function loadYear(){
     state.loading = true; state.hover = null; state.focus = null;
-    document.getElementById("prevY").textContent = "← " + (state.year - 1);
-    document.getElementById("nextY").textContent = (state.year + 1) + " →";
-    build(); renderReadout(); renderSrNav(); renderArrows();
+    build(); renderSrNav(); renderArrows();
     return store.get(yearKey(state.year)).then(function(raw){
       var data = null;
       if(raw){ try{ data = JSON.parse(raw); }catch(e){ data = null; } }
@@ -662,6 +620,11 @@
   var K_LEAF = 1.25;      // les feuilles se nomment à partir de ce zoom
   var K_PIP  = 2.20;      // les actualités apparaissent à partir de celui-là
 
+  /* Le pied du tronc dans l'image : il ne sert qu'à savoir de quel côté est le
+     dehors, pour que les fruits s'écartent de l'arbre et non vers lui. */
+  var PIED = { x:836, y:802 };
+  var MAX_PEPINS = 16;    // au-delà, le fruit est plein : le compte reste écrit
+
   function build(){
     var was = {};
     months.forEach(function(m){ was[m.i] = m.glow; });
@@ -673,6 +636,30 @@
       var bucket = {};
       list.forEach(function(e){ (bucket[catOf(e)] = bucket[catOf(e)] || []).push(e); });
       var present = CATS.filter(function(c){ return bucket[c.id]; });
+
+      /* Le bout de rameau, dans le repère de l'image : c'est de là que
+         partent les fruits, et la direction du pied donne le « dehors ». */
+      var tip = FEUILLES[i];
+      var ux = tip.x - PIED.x, uy = tip.y - PIED.y;
+      var ud = Math.hypot(ux, uy) || 1;
+      var capDehors = Math.atan2(uy / ud, ux / ud);
+
+      /* Les rayons d'abord : la place que prend l'éventail en dépend. Un fruit
+         posé au jugé chevauchait ses voisins dès qu'un mois portait plus de
+         trois catégories. */
+      var rayons = present.map(function(c, fi){
+        return 7 + Math.min(bucket[c.id].length, 14) * 0.45 + rnd(i * 7 + fi) * 1.4;
+      });
+      /* On mesure la guirlande en longueur d'arc — deux rayons par fruit, plus
+         un peu d'air — puis on recule assez pour que tout tienne sans que
+         l'éventail s'ouvre au-delà de ce que l'œil embrasse. */
+      var pose = [], cumul = 0;
+      for(var z = 0; z < rayons.length; z++){
+        if(z) cumul += 7;
+        cumul += rayons[z]; pose.push(cumul); cumul += rayons[z];
+      }
+      var OUVERTURE = 1.75;
+      var recul = Math.max(34, cumul / OUVERTURE);
 
       /* Les feuilles se répartissent le long du rameau, alternées de part et
          d'autre — comme sur la référence, où elles ne poussent jamais toutes
@@ -687,14 +674,32 @@
         var entries = bucket[c.id].slice().sort(function(a, b){
           return a.date < b.date ? 1 : -1; });
         var taille = 52 + Math.min(entries.length, 12) * 3.4;
+
+        /* Le fruit de la catégorie, suspendu en éventail au bout du rameau.
+           Il grossit un peu avec ce qu'il porte, et un grain d'irrégularité
+           l'empêche de s'aligner au cordeau sur ses voisins. */
+        var ir = rayons[fi];
+        var capFruit = capDehors + (pose[fi] - cumul / 2) / recul;
+        var loin = recul * (0.93 + rnd(i * 13 + fi) * 0.14);
+
         return {
           cat: c, month: i, key: i + ":" + c.id, t: t, ang: ouvert, cote: cote,
           base: base,
           x: base.x + Math.cos(ouvert) * taille * 0.9,
           y: base.y + Math.sin(ouvert) * taille * 0.9,
           r: taille, entries: entries, glow: 0,
-          pips: entries.slice(0, 8).map(function(e, pi, arr){
-            return { id: e.id, u: (pi + 1) / (arr.length + 1) };
+          /* les trois champs de l'image : centre, rayon, point d'attache */
+          ix: tip.x + Math.cos(capFruit) * loin,
+          iy: tip.y + Math.sin(capFruit) * loin + 4,   // il pend un peu
+          ir: ir, itip: tip,
+          pips: entries.slice(0, MAX_PEPINS).map(function(e, pi, arr){
+            /* Les pépins se rangent en spirale d'or, comme les graines d'un
+               vrai fruit : aucun ne se pose sur un autre, quel qu'en soit le
+               nombre. sx/sy sont donnés en fraction du rayon. */
+            var rr = arr.length === 1 ? 0 : Math.sqrt((pi + 0.5) / arr.length) * 0.66;
+            var aa = pi * GOLD;
+            return { id: e.id, u: (pi + 1) / (arr.length + 1),
+                     sx: Math.cos(aa) * rr, sy: Math.sin(aa) * rr * 1.04, a: aa };
           })
         };
       });
@@ -773,6 +778,7 @@
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = r.width; H = r.height;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    plaqueVue = null;                  // au nouveau format, la gravure est à refaire
     S = Math.min(W, H) / 1000;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if(!vu){ vu = true; poseVue(); }
@@ -1119,10 +1125,69 @@
   }
   /* L'image, chargée une fois puis dessinée à chaque image avec le même
      cadrage que les zones sensibles. */
+  /* Le fond est un dessin vectoriel : il reste net quand on descend sur une
+     branche, là où le bitmap s'empâtait. Si le SVG manque à l'appel, on retombe
+     sur l'ancienne image plutôt que sur un cadran vide. */
   var fond = new Image();
   var fondPret = false;
-  fond.onload = function(){ fondPret = true; if(!motion) draw(); };
-  fond.src = "fond.png";
+  fond.onload = function(){ fondPret = true; graveFond(); if(!motion) draw(); };
+  fond.onerror = function(){
+    if(fond.src.indexOf("fond.svg") < 0) return;      // le repli a échoué lui aussi
+    fond.src = "fond.png";
+  };
+  fond.src = "fond.svg";
+
+  /* ---------- la plaque ----------
+     Le dessin vectoriel porte près de soixante-dix mille segments, un flou et
+     une ombre portée. Le navigateur le rasterise à chaque taille qu'on lui
+     demande : le redemander à chaque image, pendant que la vue glisse, met la
+     boucle à genoux. On le grave donc une fois dans un canevas hors écran, au
+     cadrage posé, et la boucle ne fait plus que recopier ce bitmap — le coût
+     de l'ancienne image, la netteté du vectoriel.
+
+     Pendant le glissement la plaque est simplement étirée : elle suit la vue
+     sans être regravée. Dès que la vue s'immobilise on la regrave à l'échelle
+     atteinte, et le trait redevient franc. */
+  var plaque = document.createElement("canvas");
+  var plaqueCtx = plaque.getContext("2d");
+  var plaqueVue = null;              // le cadrage figé dans la plaque
+  var MARGE = 1.25;                  // plus large que l'écran : l'étirement ne découvre pas de vide
+
+  function graveFond(){
+    if(!fondPret || !W) return;
+    var pw = Math.ceil(W * MARGE), ph = Math.ceil(H * MARGE);
+    if(plaque.width !== Math.round(pw * dpr) || plaque.height !== Math.round(ph * dpr)){
+      plaque.width = Math.round(pw * dpr);
+      plaque.height = Math.round(ph * dpr);
+    }
+    plaqueCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    plaqueCtx.clearRect(0, 0, pw, ph);
+    // la plaque déborde l'écran de part et d'autre : son coin est en retrait
+    var ox = (pw - W) / 2, oy = (ph - H) / 2;
+    plaqueCtx.drawImage(fond, vue.dx + ox, vue.dy + oy, IMG.w * vue.s, IMG.h * vue.s);
+    plaqueVue = { s:vue.s, dx:vue.dx, dy:vue.dy, ox:ox, oy:oy, w:pw, h:ph };
+  }
+  /* On ne regrave que la vue immobile, et seulement si elle a bougé depuis la
+     dernière gravure : sans ces deux gardes, on regraverait à chaque image. */
+  function verifiePlaque(){
+    if(!fondPret || !W) return;
+    if(Math.abs(vue.s - vue.ts) > vue.ts * 0.001) return;
+    if(Math.abs(vue.dx - vue.tdx) > 0.6 || Math.abs(vue.dy - vue.tdy) > 0.6) return;
+    if(plaqueVue && Math.abs(plaqueVue.s - vue.s) < vue.s * 0.0005
+                 && Math.abs(plaqueVue.dx - vue.dx) < 0.5
+                 && Math.abs(plaqueVue.dy - vue.dy) < 0.5) return;
+    graveFond();
+  }
+  /* La plaque replacée sous la vue courante : un simple changement d'échelle
+     autour du cadrage qu'elle a figé. */
+  function dessineFond(){
+    if(!plaqueVue) return ctx.drawImage(fond, vue.dx, vue.dy, IMG.w * vue.s, IMG.h * vue.s);
+    var k = vue.s / plaqueVue.s;
+    ctx.drawImage(plaque,
+      vue.dx - (plaqueVue.ox + plaqueVue.dx) * k,
+      vue.dy - (plaqueVue.oy + plaqueVue.dy) * k,
+      plaqueVue.w * k, plaqueVue.h * k);
+  }
   /* Le repère suit la vue, jamais le cadrage de repos : sans quoi, dès qu'on
      s'approche d'une branche, les points restent en arrière et ne désignent
      plus rien. Juin et juillet n'étant séparés que de 75 px sur l'image, le
@@ -1133,13 +1198,109 @@
              r: Math.max(16, 26 * vue.s) };
   }
 
+  /* De combien on s'est approché : 0 au repos, 1 quand la branche remplit le
+     cadran. Les repères s'effacent là-dessus, les fruits y paraissent. */
+  function procheVue(){
+    return Math.max(0, Math.min(1, (vue.s / cover().s - 1.25) / 0.9));
+  }
+
+  /* Le fruit vit en coordonnées d'image, comme les repères de mois : il suit
+     donc le cadrage sans qu'on ait rien à recalculer quand la vue glisse. */
+  function fruitEcran(fr){
+    return { x: vue.dx + fr.ix * vue.s, y: vue.dy + fr.iy * vue.s,
+             r: Math.max(9, fr.ir * vue.s),
+             ax: vue.dx + fr.itip.x * vue.s, ay: vue.dy + fr.itip.y * vue.s };
+  }
+  /* Seuls les fruits de la branche visée sont là : ailleurs ils flotteraient
+     sur du bleu vide, loin de leur rameau. */
+  function fruitsEnVue(){
+    if(DESSINE_BOIS || state.focus === null) return [];
+    if(procheVue() < 0.25) return [];
+    var m = months[state.focus];
+    return m ? m.feuilles : [];
+  }
+
+  /* Un fruit par catégorie, un pépin par actualité. La chair est translucide :
+     c'est ce qui laisse voir les graines au travers plutôt que posées dessus. */
+  function dessineFruit(fr, a, fnt){
+    var s = fruitEcran(fr);
+    var vif = fr.glow;
+    var R = s.r * (1 + vif * 0.07);
+
+    ctx.save();
+    ctx.globalAlpha = a;
+
+    // le pédoncule : le fruit tient à la branche, il ne flotte pas
+    ctx.strokeStyle = hexa(BOIS.moyen, 0.8);
+    ctx.lineWidth = Math.max(1, R * 0.055);
+    ctx.beginPath();
+    ctx.moveTo(s.ax, s.ay);
+    ctx.quadraticCurveTo((s.ax + s.x) / 2, (s.ay + s.y) / 2 - R * 0.3, s.x, s.y - R * 0.94);
+    ctx.stroke();
+
+    if(vif > 0.02){                       // le halo du fruit retenu
+      var hg = ctx.createRadialGradient(s.x, s.y, R * 0.75, s.x, s.y, R * 1.95);
+      hg.addColorStop(0, hexa(fr.cat.hue, 0.34 * vif));
+      hg.addColorStop(1, hexa(fr.cat.hue, 0));
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(s.x, s.y, R * 1.95, 0, 6.2832); ctx.fill();
+    }
+
+    // la chair, éclairée de biais comme le bois de la référence
+    var g = ctx.createRadialGradient(s.x - R * 0.32, s.y - R * 0.38, R * 0.12,
+                                     s.x, s.y, R * 1.05);
+    g.addColorStop(0, hexa(fr.cat.soft, 0.52 + vif * 0.2));
+    g.addColorStop(1, hexa(fr.cat.hue, 0.42 + vif * 0.22));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(s.x, s.y, R, R * 1.06, 0, 0, 6.2832);
+    ctx.fill();
+    ctx.strokeStyle = hexa(fr.cat.soft, 0.4 + vif * 0.5);
+    ctx.lineWidth = Math.max(1, R * 0.045);
+    ctx.stroke();
+
+    // les pépins : chacun couché dans le sens du rayon, comme dans un fruit ouvert
+    for(var i = 0; i < fr.pips.length; i++){
+      var p = fr.pips[i];
+      var px = s.x + p.sx * R, py = s.y + p.sy * R;
+      var chaud = state.pip === p.id;
+      var pr = R * (chaud ? 0.175 : 0.135);
+      if(chaud){
+        ctx.fillStyle = "rgba(248,244,236,.26)";
+        ctx.beginPath(); ctx.arc(px, py, pr * 2.2, 0, 6.2832); ctx.fill();
+      }
+      ctx.fillStyle = chaud ? "rgba(253,250,245,.98)" : "rgba(248,244,236,.85)";
+      ctx.beginPath();
+      ctx.ellipse(px, py, pr * 1.28, pr, p.a, 0, 6.2832);
+      ctx.fill();
+    }
+
+    /* Le nom ne paraît qu'au survol : six étiquettes à demeure se marchaient
+       dessus et masquaient les fruits qu'elles nommaient. Le compte, lui, se
+       lit dans les pépins eux-mêmes. */
+    if(a > 0.45 && vif > 0.2){
+      var reste = fr.entries.length - fr.pips.length;
+      ctx.font = '600 ' + Math.max(9, Math.min(fnt * 0.6, R * 0.42)).toFixed(1) +
+                 'px "Syne",Helvetica,sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.letterSpacing = "0.14em";
+      ctx.shadowColor = "rgba(6,14,26,.92)"; ctx.shadowBlur = 9;
+      ctx.fillStyle = "rgba(244,236,224," + (vif * 0.95).toFixed(2) + ")";
+      ctx.fillText(fr.cat.name.toUpperCase() + "  " + fr.entries.length +
+                   (reste > 0 ? "  (+" + reste + ")" : ""),
+                   s.x, s.y + R * 1.22);
+      ctx.shadowBlur = 0; ctx.letterSpacing = "0px";
+    }
+    ctx.restore();
+  }
+
   function dessineParDessus(f, vueFeuille, vuePepin){
     // l'image et les repères partagent la même vue : ils ne peuvent pas dériver
-    if(fondPret) ctx.drawImage(fond, vue.dx, vue.dy, IMG.w * vue.s, IMG.h * vue.s);
+    verifiePlaque();
+    if(fondPret) dessineFond();
     /* De près, on ne montre que la branche visée : les onze autres repères
        flotteraient sur du bleu vide, hors de leur dessin. */
-    var repos = cover().s;
-    var proche = Math.max(0, Math.min(1, (vue.s / repos - 1.25) / 0.9));
+    var proche = procheVue();
 
     for(var i = 0; i < 12; i++){
       var s = spot(i), m = months[i], n = m ? m.n : 0;
@@ -1190,19 +1351,35 @@
       }
       ctx.restore();
     }
+    /* --- les fruits de la branche visée ---
+       Le fruit survolé est peint en dernier : sinon son voisin lui passait
+       devant et son nom se lisait sous une autre chair. */
+    var fruits = fruitsEnVue(), aFruit = Math.min(1, (proche - 0.25) / 0.35), tard = null;
+    for(var fi2 = 0; fi2 < fruits.length; fi2++){
+      if(fruits[fi2].key === state.hover || fruits[fi2].key === state.fruit) tard = fruits[fi2];
+      else dessineFruit(fruits[fi2], aFruit, f);
+    }
+    if(tard) dessineFruit(tard, aFruit, f);
+
+    /* Le pied de page dit où l'on se trouve : le sujet tant qu'on embrasse
+       l'arbre entier, le mois dès qu'on est descendu sur une branche. De près,
+       rien d'autre ne nomme ce qu'on regarde. */
+    var surBranche = proche > 0.5 && state.focus !== null && months[state.focus];
+    var compte = surBranche ? months[state.focus].n : state.entries.length;
+
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     ctx.font = '700 ' + (f * 1.12).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
     ctx.letterSpacing = "0.26em";
     ctx.shadowColor = "rgba(6,14,26,.9)"; ctx.shadowBlur = 12;
     ctx.fillStyle = "rgba(240,232,220,.95)";
-    ctx.fillText("LES SYSTÈMES D'INFOS", W / 2, H - f * 4.6);
-    var tot = state.entries.length;
+    ctx.fillText(surBranche ? MONTHS[state.focus].toUpperCase() : "LES SYSTÈMES D'INFOS",
+                 W / 2, H - f * 4.6);
     ctx.font = '400 ' + (f * 0.72).toFixed(1) + 'px "Syne",Helvetica,sans-serif';
     ctx.letterSpacing = "0.2em";
     ctx.fillStyle = "rgba(201,168,133,.85)";
     ctx.fillText(state.loading ? "CHARGEMENT"
-      : state.year + "   ·   " + (tot ? tot + (tot > 1 ? " ACTUALITÉS" : " ACTUALITÉ")
-                                      : "AUCUNE ACTUALITÉ"),
+      : state.year + "   ·   " + (compte ? compte + (compte > 1 ? " ACTUALITÉS" : " ACTUALITÉ")
+                                         : "AUCUNE ACTUALITÉ"),
       W / 2, H - f * 2.6);
     ctx.shadowBlur = 0;
     ctx.letterSpacing = "0px";
@@ -1229,6 +1406,25 @@
     if(!r.width) return null;
     var x = clientX - r.left, y = clientY - r.top;
     var best = null, bd = 1e9;
+
+    /* Les fruits passent devant : ils sont au premier plan, et dans un fruit
+       le pépin l'emporte sur la chair qui l'entoure. */
+    var fs = fruitsEnVue(), pep = null, pd = 1e9;
+    for(var k = 0; k < fs.length; k++){
+      var fr = fs[k], fe = fruitEcran(fr);
+      for(var pi = 0; pi < fr.pips.length; pi++){
+        var pp = fr.pips[pi];
+        var dp = Math.hypot(x - (fe.x + pp.sx * fe.r), y - (fe.y + pp.sy * fe.r));
+        if(dp < Math.max(7, fe.r * 0.19) && dp < pd){
+          pd = dp; pep = { kind:"pip", fruit:fr, id:pp.id };
+        }
+      }
+      var df = Math.hypot(x - fe.x, y - fe.y);
+      if(df < fe.r * 1.06 && df < bd){ bd = df; best = { kind:"fruit", fruit:fr }; }
+    }
+    if(pep) return pep;
+    if(best) return best;
+
     for(var i = 0; i < 12; i++){
       var s = spot(i);
       var d = Math.hypot(x - s.x, y - s.y);
@@ -1309,7 +1505,7 @@
     if(t.kind === "pip"){ openEntry(t.id); return; }
     if(t.kind === "month"){ selectMonth(t.month.i); return; }
     // un fruit trop loin : on s'approche d'abord, on l'ouvre ensuite
-    if(cam.k < K_LEAF) zoomTo(t.fruit);
+    if(DESSINE_BOIS && cam.k < K_LEAF) zoomTo(t.fruit);
     selectFruit(t.fruit);
   });
   cv.addEventListener("dblclick", function(){ recentre(); });
@@ -1328,9 +1524,28 @@
   /* Le point d'accroche de la fiche : la pointe de branche du mois retenu, dans
      le repère de l'écran. (L'ancien calcul passait par le monde de l'arbre
      dessiné, qui n'existe plus depuis que le fond est une image.) */
-  function anchor(){
+  /* Le mois seul : c'est là que se pose le bouton d'écriture, qui ne doit pas
+     sauter d'un fruit à l'autre au gré des clics. */
+  function ancreMois(){
     if(state.focus === null) return null;
     if(!DESSINE_BOIS) return spot(state.focus);
+    if(months[state.focus])
+      return { x:X(months[state.focus].x), y:Y(months[state.focus].y), r:dpx(20) };
+    return null;
+  }
+  function anchor(){
+    if(state.focus === null) return null;
+    if(!DESSINE_BOIS){
+      if(state.fruit){
+        var fl = (months[state.focus] || {}).feuilles || [];
+        for(var i = 0; i < fl.length; i++)
+          if(fl[i].key === state.fruit){
+            var fe = fruitEcran(fl[i]);
+            return { x:fe.x, y:fe.y, r:fe.r };
+          }
+      }
+      return spot(state.focus);
+    }
     if(state.fruit){
       var fr = allLeaves().filter(function(f){ return f.key === state.fruit; })[0];
       if(fr) return { x:X(fr.x), y:Y(fr.y), r:dpx(fr.r) };
@@ -1370,7 +1585,7 @@
      rien ne recouvre les pointes voisines. */
   function placePlus(){
     if(!plusEl || plusEl.hidden || state.focus === null) return;
-    var a = anchor();
+    var a = ancreMois();
     if(!a) return;
     var pr = cv.getBoundingClientRect(), pl = plusEl.parentNode.getBoundingClientRect();
     var w = plusEl.offsetWidth, h = plusEl.offsetHeight;
@@ -1390,7 +1605,7 @@
     plusEl.setAttribute("aria-label", "Écrire une entrée de " + MONTHS[i].toLowerCase());
     plusEl.title = "Écrire";
     majRetour();
-    renderReadout(); renderArrows(); placePlus();
+    renderArrows(); placePlus();
     if(!motion) draw();
   }
   plusEl.addEventListener("click", function(){ openComposer(state.focus, null); });
@@ -1409,7 +1624,7 @@
     state.fruit = null; state.focus = null;
     if(!DESSINE_BOIS) reposVue();               // et on reprend du champ
     majRetour();
-    renderReadout(); renderArrows();
+    renderArrows();
     if(!motion) draw();
   }
   function fillCard(titre, sous, entries, monthIdx){
@@ -1425,7 +1640,7 @@
     cardEl.hidden = false;
     state.focus = monthIdx;
     majRetour();
-    renderReadout(); renderArrows(); placeCard();
+    renderArrows(); placeCard();
     if(!motion) draw();
   }
   function selectFruit(fr){
@@ -1445,7 +1660,7 @@
     if(discret){
       state.focus = i;
       retourEl.hidden = true;        // rien à ramener : on n'a pas bougé
-      renderReadout(); renderArrows();
+      renderArrows();
       if(!motion) draw();
       return;
     }
@@ -1456,11 +1671,6 @@
   cardEl.addEventListener("click", function(ev){
     if(ev.target.closest("#detailShut")){ closeCard(); return; }
     if(ev.target.closest("#detailWrite")){ openComposer(state.focus, null); return; }
-    if(ev.target.closest("#detailAll")){
-      document.getElementById("readout").scrollIntoView({
-        behavior: motion ? "smooth" : "auto", block: "start" });
-      return;
-    }
     var li = ev.target.closest("[data-entry]");
     if(li) openEntry(li.getAttribute("data-entry"));
   });
@@ -1486,36 +1696,6 @@
     return bits.length ? '<div class="tags">' + bits.join("") + '</div>' : "";
   }
 
-  // Une seule colonne, celle du mois qu'on regarde : le survol d'un point y
-  // déplie l'entrée, sinon elle liste les dernières.
-  function renderReadout(){
-    var ro = document.getElementById("readout");
-    if(state.focus === null){
-      ro.innerHTML = '<p class="idle">' +
-        (state.loading ? "Chargement" : "Choisissez un mois sur l'arbre") + '</p>';
-      return;
-    }
-    var fx = state.focus, all = byMonth(fx), n = all.length;
-    var prevM = (fx + 11) % 12, nextM = (fx + 1) % 12;
-    var head = '<div class="rhead"><div class="rtitle">' +
-      '<div class="rmonth">' + MONTHS[fx] + '</div>' +
-      '<div class="rsub">' + (state.loading ? "Chargement"
-        : (n ? n + (n > 1 ? " entrées" : " entrée") : "aucune entrée")) + '</div></div>' +
-      '<button class="act lead" data-new="' + fx + '">Écrire</button></div>' +
-      '<div class="rnav">' +
-        '<button class="act" data-month="' + prevM + '">‹ ' + MONTHS[prevM] + '</button>' +
-        '<button class="act" data-month="' + nextM + '">' + MONTHS[nextM] + ' ›</button>' +
-      '</div>';
-
-    if(!n){ ro.innerHTML = head + '<p class="rnone">Ce mois n\'a rien retenu.</p>'; return; }
-    ro.innerHTML = head + '<ul class="rlist">' + all.slice(-PREVIEW).reverse().map(function(e, k){
-      return '<li class="fade" style="animation-delay:' + (k * 32) + 'ms" data-entry="' + e.id + '">' +
-        '<span class="day">' + dayStamp(e) + '</span>' +
-        '<span class="ttl">' + esc(labelOf(e)) + '</span></li>';
-    }).join("") + '</ul>' +
-    (n > PREVIEW ? '<p class="rmore">+ ' + (n - PREVIEW) + " plus anciennes</p>" : "");
-  }
-
   // Les chevrons des côtés : le seul chemin d'un mois à l'autre sur la carte.
   function renderArrows(){
     var f = state.focus === null ? 0 : state.focus;
@@ -1526,19 +1706,6 @@
   }
   document.getElementById("prevM").addEventListener("click", function(){ stepMonth(-1); });
   document.getElementById("nextM").addEventListener("click", function(){ stepMonth(1); });
-
-  document.getElementById("readout").addEventListener("click", function(ev){
-    var b = ev.target.closest("[data-month]");
-    if(b){ selectMonth(parseInt(b.getAttribute("data-month"), 10)); return; }
-    var nb = ev.target.closest("[data-new]");
-    if(nb){ openComposer(parseInt(nb.getAttribute("data-new"), 10), null); return; }
-    var li = ev.target.closest("[data-entry]");
-    if(li) openEntry(li.getAttribute("data-entry"));
-  });
-  document.getElementById("readout").addEventListener("mouseover", function(ev){
-    var li = ev.target.closest("[data-entry]");
-    if(li) setHover(li.getAttribute("data-entry"));
-  });
 
   /* ---------------- panneau ---------------- */
   var panel = document.getElementById("panel"),
@@ -1748,7 +1915,7 @@
       if(e.hasPhoto) store.del(imgKey(id));
       delete thumbs[id];
       if(state.hover === id) state.hover = null;
-      build(); renderSrNav(); renderReadout(); closePanel();
+      build(); renderSrNav(); closePanel();
     });
   }
 
@@ -1779,8 +1946,6 @@
   }
 
   /* ---------------- événements ---------------- */
-  document.getElementById("prevY").addEventListener("click", function(){ state.year--; loadYear(); });
-  document.getElementById("nextY").addEventListener("click", function(){ state.year++; loadYear(); });
   document.getElementById("exportBtn").addEventListener("click", exportJSON);
   document.getElementById("shut").addEventListener("click", closePanel);
   veil.addEventListener("click", closePanel);
@@ -1862,8 +2027,8 @@
     var an = parseInt(draft.date.slice(0, 4), 10);
     if(an && an !== state.year){
       state.year = an;
-      loadYear().then(function(){ openComposer(monthOf(draft), draft); });
-    } else openComposer(monthOf(draft), draft);
+      loadYear().then(function(){ openComposer(monthOf(draft), draft); redigerBrouillon(draft); });
+    } else { openComposer(monthOf(draft), draft); redigerBrouillon(draft); }
   });
 
   /* ---------------- venu de la veille ----------------
@@ -1884,15 +2049,40 @@
     var d = new Date(v.d || Date.now());
     if(isNaN(d.getTime())) d = new Date();
     var iso = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
-    var corps = (v.s ? v.s + "\n\n" : "") +
-      "— " + (v.src || "source") +
+    var signature = "— " + (v.src || "source") +
       (v.trust === "officiel" ? " · source officielle"
                               : (v.conf > 1 ? " · confirmé par " + v.conf + " sources" : ""));
     return {
-      date: iso, title: v.t || "", body: corps, link: v.u || "",
+      date: iso, title: v.t || "", body: (v.s ? v.s + "\n\n" : "") + signature,
+      link: v.u || "",
       lang: v.l === "en" ? "anglais" : (v.l === "fr" ? "français" : (v.l || "")),
-      country: "", tags: []
+      country: "", tags: [],
+      /* de quoi demander une rédaction après coup : l'identifiant de l'actualité
+         et la ligne de provenance, qu'on ne veut pas perdre au remplacement */
+      veilleId: v.i || null, signature: signature
     };
+  }
+
+  /* La fiche s'ouvre tout de suite avec le résumé du flux ; si le serveur sait
+     rédiger, sa version arrive une seconde plus tard et remplace le texte — mais
+     seulement s'il n'a pas été touché entre-temps. On n'écrase jamais ce que
+     l'utilisateur vient d'écrire, et une panne ne laisse pas la fiche vide.   */
+  function redigerBrouillon(draft){
+    if(!draft || !draft.veilleId) return;
+    var ta = document.getElementById("f-body");
+    if(!ta || ta.value !== draft.body) return;
+    var pose = ta.value;
+    ta.style.opacity = "0.65";
+    fetch("/api/actualites/" + encodeURIComponent(draft.veilleId) + "/redaction",
+          { method: "POST", credentials: "include" })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        ta.style.opacity = "";
+        if(!d || d.origine !== "claude" || !d.texte) return;
+        if(ta.value !== pose) return;                 // écrit pendant l'appel : on s'efface
+        ta.value = d.texte + "\n\n" + draft.signature;
+      })
+      .catch(function(){ ta.style.opacity = ""; });
   }
   function takeVeille(){
     var m = /(?:^|[#&])veille=([^&]+)/.exec(location.hash || "");
@@ -1919,7 +2109,7 @@
   }
   loadYear().then(function(){
     noteStockage();
-    if(venu) openComposer(monthOf(venu), venu);
+    if(venu){ openComposer(monthOf(venu), venu); redigerBrouillon(venu); }
   });
 })();
 </script>

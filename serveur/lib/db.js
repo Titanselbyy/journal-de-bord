@@ -105,6 +105,11 @@ function addColumn(table, name, decl){
 }
 addColumn("sources",  "trust",       "TEXT NOT NULL DEFAULT 'presse'");
 addColumn("sources",  "weight",      "REAL NOT NULL DEFAULT 1.5");
+/* Le journal derrière le flux. Deux flux d'une même rédaction (les trois fils du
+   CERT-FR, les deux rubriques du Journal du Net) ne sont pas deux témoins
+   indépendants : sans cette colonne, ils se « confirmeraient » l'un l'autre et
+   la règle de provenance ne vaudrait plus rien. */
+addColumn("sources",  "publisher",   "TEXT");
 addColumn("articles", "score",       "REAL");
 addColumn("articles", "confirms",    "INTEGER NOT NULL DEFAULT 1");
 addColumn("articles", "trust_level", "TEXT");
@@ -132,9 +137,10 @@ const s = {
   all:      db.prepare("SELECT * FROM sources ORDER BY name"),
   active:   db.prepare("SELECT * FROM sources WHERE active = 1 ORDER BY id"),
   byUrl:    db.prepare("SELECT * FROM sources WHERE url = ?"),
-  add:      db.prepare(`INSERT INTO sources(url, name, lang, active, filtered, trust, weight, created_at)
-                        VALUES (?, ?, ?, 1, ?, ?, ?, ?)`),
-  tune:     db.prepare("UPDATE sources SET trust = ?, weight = ?, filtered = ?, lang = ? WHERE url = ?"),
+  add:      db.prepare(`INSERT INTO sources(url, name, lang, active, filtered, trust, weight, publisher, created_at)
+                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)`),
+  tune:     db.prepare(`UPDATE sources SET trust = ?, weight = ?, filtered = ?, lang = ?,
+                        publisher = ? WHERE url = ?`),
   setState: db.prepare("UPDATE sources SET active = ? WHERE id = ?"),
   remove:   db.prepare("DELETE FROM sources WHERE id = ?"),
   ok:       db.prepare(`UPDATE sources SET etag = ?, last_modified = ?, last_ok = ?,
@@ -143,15 +149,16 @@ const s = {
                         WHERE id = ?`)
 };
 
-function addSource(url, name, lang, filtered, trust, weight){
+function addSource(url, name, lang, filtered, trust, weight, publisher){
+  const pub = publisher || name || url;      // sans mention, chaque flux est son propre journal
   const found = s.byUrl.get(url);
   if(found){
     // une source déjà connue voit ses réglages rafraîchis au démarrage
-    s.tune.run(trust || "presse", weight || 1.5, filtered ? 1 : 0, lang || null, url);
+    s.tune.run(trust || "presse", weight || 1.5, filtered ? 1 : 0, lang || null, pub, url);
     return s.byUrl.get(url);
   }
   s.add.run(url, name || url, lang || null, filtered ? 1 : 0,
-            trust || "presse", weight || 1.5, now());
+            trust || "presse", weight || 1.5, pub, now());
   return s.byUrl.get(url);
 }
 
@@ -180,7 +187,8 @@ const a = {
   // Le vivier de sélection : tout ce qui est récent, avec les attributs de sa
   // source. C'est sur cet ensemble que se calcule la corroboration.
   recent: db.prepare(`SELECT a.id, a.title, a.summary, a.published_at, a.fetched_at,
-                             a.source_id, s.name AS source, s.lang, s.trust, s.weight
+                             a.source_id, s.name AS source, s.lang, s.trust, s.weight,
+                             COALESCE(s.publisher, s.name) AS publisher
                         FROM articles a JOIN sources s ON s.id = a.source_id
                        WHERE a.fetched_at >= ?`),
   promote: db.prepare(`UPDATE articles SET score = ?, confirms = ?, trust_level = ?, major = 1
@@ -260,7 +268,7 @@ module.exports = {
   users: { ensure: ensureUser, byId: q.userById, allIds: () => q.allUserIds.all().map(u => u.id),
            inherit: (userId) => a.fanIn.run(userId) },
   sources: { list: () => s.all.all(), active: () => s.active.all(),
-             add: (u, n, l, f, t, w) => addSource(u, n, l, f, t, w),
+             add: (u, n, l, f, t, w, p) => addSource(u, n, l, f, t, w, p),
              setState: (id, on) => s.setState.run(on ? 1 : 0, id),
              remove: (id) => s.remove.run(id),
              ok: (id, etag, lastMod) => s.ok.run(etag || null, lastMod || null, now(), id),

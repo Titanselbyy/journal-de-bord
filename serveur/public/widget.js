@@ -381,7 +381,7 @@
       if(!JOURNAL) return;
       var sep = JOURNAL.indexOf("#") >= 0 ? "&" : "#";
       window.open(JOURNAL + sep + "veille=" + pack({
-        t: a.title, u: a.url, s: a.summary || "", src: a.source,
+        i: a.id, t: a.title, u: a.url, s: a.summary || "", src: a.source,
         d: a.published_at || a.fetched_at, l: a.lang || "fr",
         conf: a.confirms || 1, trust: a.trust_level || "confirmé"
       }), "_blank", "noopener");

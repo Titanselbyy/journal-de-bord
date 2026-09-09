@@ -7,6 +7,7 @@ const path = require("path");
 const D = require("./lib/db.js");
 const collector = require("./lib/collector.js");
 const entries = require("./lib/entries.js");
+const redaction = require("./lib/redaction.js");
 const DEFAULT_SOURCES = require("./lib/sources.js");
 
 const PORT = Number(process.env.PORT) || 4310;
@@ -19,7 +20,7 @@ const ORIGINS = (process.env.ALLOWED_ORIGINS || "")
 /* ---------------- amorçage ---------------- */
 const me = D.users.ensure(process.env.VEILLE_USER || "moi@local", "Moi");
 for(const s of DEFAULT_SOURCES)
-  D.sources.add(s.url, s.name, s.lang, s.filtered, s.trust, s.weight);
+  D.sources.add(s.url, s.name, s.lang, s.filtered, s.trust, s.weight, s.publisher);
 D.users.inherit(me.id);      // un utilisateur ajouté après coup hérite du passé
 
 /* Mono-utilisateur pour l'instant. Le jour où une authentification arrive, c'est
@@ -97,7 +98,8 @@ app.get("/api/state", (req, res) => {
     lastRun: last ? { at: last.ended_at || last.started_at, added: last.added,
                       errors: last.errors, trigger: last.trigger } : null,
     busy: collector.busy(),
-    journal: { distant: entries.distant }
+    journal: { distant: entries.distant },
+    redaction: redaction.disponible()
   });
 });
 
@@ -159,6 +161,28 @@ app.post("/api/refresh", async (req, res) => {
                unread: D.articles.unread(user.id), detail: stats.detail });
   }catch(e){
     res.status(500).json({ error: String(e.message).slice(0, 200) });
+  }
+});
+
+/* ---------------- rédaction d'un résumé ----------------
+   On ne réécrit que ce qui est déjà en base, désigné par son identifiant : le
+   corps de la requête n'apporte aucun texte. Un inconnu qui devine l'URL ne peut
+   donc que refaire réécrire des actualités déjà collectées — bornées par le
+   cache et le plafond horaire de lib/redaction.js.                            */
+app.post("/api/actualites/:id/redaction", async (req, res) => {
+  const art = D.articles.byId(Number(req.params.id));
+  if(!art) return res.status(404).json({ error: "actualité inconnue" });
+  const src = D.sources.list().filter(s => s.id === art.source_id)[0];
+  try{
+    res.json(await redaction.resumer({
+      id: art.id, title: art.title, summary: art.summary,
+      lang: art.lang, source: src ? src.name : null
+    }));
+  }catch(e){
+    // Une panne de l'API ne doit jamais priver l'utilisateur de sa fiche :
+    // on rend le résumé du flux et on dit d'où il vient.
+    res.json({ texte: art.summary || "", origine: "flux",
+               erreur: String(e.message).slice(0, 160) });
   }
 });
 

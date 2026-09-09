@@ -83,7 +83,9 @@ function cluster(articles){
   }
   const map = new Map();
   for(const g of groups){
-    const sources = new Set(g.map(x => x.source_id));
+    // On compte les RÉDACTIONS, pas les flux : les trois fils du CERT-FR ou les
+    // deux rubriques d'un même journal ne constituent qu'un seul témoignage.
+    const sources = new Set(g.map(x => x.publisher || ("flux:" + x.source_id)));
     for(const a of g) map.set(a, { size: g.length, sources: sources.size, group: g });
   }
   return map;
@@ -161,8 +163,9 @@ function select(articles, opts){
   // même autorité noieraient tout le reste.
   const perSrc = new Map();
   const spread = eligible.filter(a => {
-    const n = (perSrc.get(a.source_id) || 0) + 1;
-    perSrc.set(a.source_id, n);
+    const cle = a.publisher || ("flux:" + a.source_id);
+    const n = (perSrc.get(cle) || 0) + 1;
+    perSrc.set(cle, n);
     return n <= o.perSource;
   });
 

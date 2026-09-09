@@ -61,3 +61,10 @@ services:
         sync: false
       - key: JOURNAL_DB_TOKEN
         sync: false
+
+      # La rédaction des résumés (facultative). Sans cette clé, le journal
+      # pré-remplit la fiche avec le résumé nettoyé du flux : rien ne casse,
+      # le texte est seulement moins soigné. Clé à créer sur
+      # https://console.anthropic.com, puis à saisir ici — jamais dans le dépôt.
+      - key: ANTHROPIC_API_KEY
+        sync: false
