@@ -1153,8 +1153,11 @@
   var plaqueVue = null;              // le cadrage figé dans la plaque
   var MARGE = 1.25;                  // plus large que l'écran : l'étirement ne découvre pas de vide
 
-  function graveFond(){
+  /* Le cadrage gravé est celui de la vue courante, sauf si l’appelant en impose
+     un autre — c’est ce que fait le dézoom, qui grave d’emblée à l’échelle visée. */
+  function graveFond(s, dx, dy){
     if(!fondPret || !W) return;
+    if(s === undefined){ s = vue.s; dx = vue.dx; dy = vue.dy; }
     var pw = Math.ceil(W * MARGE), ph = Math.ceil(H * MARGE);
     if(plaque.width !== Math.round(pw * dpr) || plaque.height !== Math.round(ph * dpr)){
       plaque.width = Math.round(pw * dpr);
@@ -1164,13 +1167,25 @@
     plaqueCtx.clearRect(0, 0, pw, ph);
     // la plaque déborde l'écran de part et d'autre : son coin est en retrait
     var ox = (pw - W) / 2, oy = (ph - H) / 2;
-    plaqueCtx.drawImage(fond, vue.dx + ox, vue.dy + oy, IMG.w * vue.s, IMG.h * vue.s);
-    plaqueVue = { s:vue.s, dx:vue.dx, dy:vue.dy, ox:ox, oy:oy, w:pw, h:ph };
+    plaqueCtx.drawImage(fond, dx + ox, dy + oy, IMG.w * s, IMG.h * s);
+    plaqueVue = { s:s, dx:dx, dy:dy, ox:ox, oy:oy, w:pw, h:ph };
   }
   /* On ne regrave que la vue immobile, et seulement si elle a bougé depuis la
-     dernière gravure : sans ces deux gardes, on regraverait à chaque image. */
+     dernière gravure : sans ces deux gardes, on regraverait à chaque image.
+
+     L’exception est le dézoom. La plaque ne déborde l’écran que de MARGE : dès
+     que la vue recule davantage, l’étirement la fait rentrer dans le cadran et
+     découvre du vide sur les bords. Au retour d’une branche, où l’échelle est
+     divisée par Z_BRANCHE, il ne resterait qu’un tiers d’écran dessiné pendant
+     toute la glissade — le reste laissant voir le bleu de la page, ce qui se
+     lit comme un fond disparu. On grave donc tout de suite au cadrage visé :
+     l’étirement ne fait plus que grossir, la couverture est acquise, et le
+     trait est déjà net à l’arrivée. Le gros plan s’adoucit le temps du recul,
+     ce qui se voit beaucoup moins qu’un fond qui s’en va. */
   function verifiePlaque(){
     if(!fondPret || !W) return;
+    if(plaqueVue && vue.ts < plaqueVue.s / MARGE)
+      return graveFond(vue.ts, vue.tdx, vue.tdy);
     if(Math.abs(vue.s - vue.ts) > vue.ts * 0.001) return;
     if(Math.abs(vue.dx - vue.tdx) > 0.6 || Math.abs(vue.dy - vue.tdy) > 0.6) return;
     if(plaqueVue && Math.abs(plaqueVue.s - vue.s) < vue.s * 0.0005
